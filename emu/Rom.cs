@@ -28,7 +28,15 @@ namespace GB.emu
 
         private Rom()
         {
-            Data = new byte[1] { 0x76 }; //halt
+            Data = new byte[0x14F];
+
+            Data[0x100] = 0x76; //halt
+            Data[0x147] = 0x0; //cartridge type
+            Data[0x148] = 0x0; //amount of rom banks. here 0
+            Data[0x149] = 0x0; //size of external ram. here 0
+            Data[0x14A] = 0x1; //destination code
+
+            //TODO: extend rom header with title, manufacturing info etc.
         }
     }
 }
