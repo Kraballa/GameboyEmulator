@@ -45,7 +45,16 @@ namespace GB.emu
                 case 0x10: //STOP
                     //TODO
                     break;
-
+                case 0xF3: //Disable Interrupts via Interrupt Master Enable Flag
+                    Memory.IMEF = false;
+                    break;
+                case 0xFB: //Enable Interrupts via Interrupt Master Enable Flag
+                    Memory.IMEF = true;
+                    break;
+                case 0xD9: //RETI
+                    Memory.IMEF = true;
+                    //TODO: same code as RET
+                    break;
                 case 0xCB:
                     Execute16BitOpcodes(Fetch());
                     break;

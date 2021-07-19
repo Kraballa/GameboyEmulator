@@ -4,6 +4,18 @@ using System.Text;
 
 namespace GB.emu
 {
+    /// <summary>
+    /// Used both for enabling/disabling Interrupts as well as Requests in IEREG and IFREG
+    /// </summary>
+    public enum Interrupt
+    {
+        VBLANK = 0b1,
+        LCDSTAT = 0b10,
+        TIMER = 0b100,
+        SERIAL = 0b1000,
+        JOYPAD = 0b10000
+    }
+
     public class Memory
     {
         //BANK0 starts at 0x00 so it's left out here
@@ -15,7 +27,10 @@ namespace GB.emu
         public const ushort ERAM = 0xE000; //echo ram, mirror of both WRAMS
         public const ushort OAM = 0xFE00; //sprite attribute table, called OAM (object attribute memory)
         public const ushort HiRAM = 0xFF80;
-        public const ushort IEREG = 0xFFFF;
+        public const ushort IFREG = 0xFF0F; //Interrupt Request Register
+        public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
+
+        public Dictionary<ushort, Action> MemoryAccessCallback = new Dictionary<ushort, Action>();
 
         public byte IE
         {
@@ -23,12 +38,19 @@ namespace GB.emu
             set => mem[0xFFFF] = value;
         }
 
+        public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
+
         private byte[] mem = new byte[0xFFFF];
 
-        public byte this[uint index]
+        public byte this[ushort index]
         {
             get => mem[index];
-            set => mem[index] = value;
+            set
+            {
+                mem[index] = value;
+                if (MemoryAccessCallback.ContainsKey(index))
+                    MemoryAccessCallback[index].Invoke();
+            }
         }
     }
 }
