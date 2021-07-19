@@ -9,4 +9,8 @@
     <ProjectReference Include="..\..\..\Documents\Sources\Lib\FNA\FNA.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="data\" />
+  </ItemGroup>
+
 </Project>
