@@ -20,7 +20,7 @@ namespace GB.emu
 
             if (rom == null)
             {
-                rom = Rom.Empty;
+                Rom = Rom.Empty;
             }
             else
             {
