@@ -13,12 +13,15 @@ namespace GB
 
         private GraphicsDeviceManager Graphics;
 
+        public CPU CPU;
+
         public Controller() : base()
         {
             Instance = this;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
             Graphics = new GraphicsDeviceManager(this);
+            CPU = new CPU();
         }
 
         protected override void Initialize()
@@ -39,9 +42,7 @@ namespace GB
         {
             MInput.Update();
             KInput.Update();
-
-            new CPU();
-
+            //update cpu...
             base.Update(gameTime);
         }
 
@@ -49,7 +50,7 @@ namespace GB
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             Render.Begin();
-            Render.Circle(MInput.PositionF, 5, Color.Red, 5);
+            //render...
             Render.End();
             base.Draw(gameTime);
         }

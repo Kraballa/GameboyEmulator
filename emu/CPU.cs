@@ -7,8 +7,25 @@ namespace GB.emu
     public class CPU
     {
         Flags Flags = 0;
-        Registers Regs = new Registers();
-        Memory Memory = new Memory();
+        Registers Regs;
+        Memory Memory;
+        Rom Rom;
+
+        public CPU(Rom rom = null)
+        {
+            Regs = new Registers();
+            Memory = new Memory();
+
+            if (rom == null)
+            {
+                rom = Rom.Empty;
+            }
+            else
+            {
+                Rom = rom;
+            }
+            //TODO: load first rom bank into memory
+        }
 
         private byte Fetch()
         {
