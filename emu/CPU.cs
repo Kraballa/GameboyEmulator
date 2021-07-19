@@ -12,9 +12,7 @@ namespace GB.emu
 
         private byte Fetch()
         {
-            byte code = 0x00;
-            Regs.PC++;
-            return code;
+            return Memory[Regs.PC++];
         }
 
         private void Execute(byte opcode)

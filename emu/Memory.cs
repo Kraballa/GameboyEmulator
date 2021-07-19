@@ -13,7 +13,7 @@ namespace GB.emu
         public const ushort WRAM0 = 0xC000;
         public const ushort WRAM1 = 0xD000;
         public const ushort ERAM = 0xE000; //echo ram, mirror of both WRAMS
-        public const ushort SAT = 0xFE00;
+        public const ushort OAM = 0xFE00; //sprite attribute table, called OAM (object attribute memory)
         public const ushort HiRAM = 0xFF80;
         public const ushort IEREG = 0xFFFF;
 
