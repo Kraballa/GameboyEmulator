@@ -6,7 +6,7 @@ namespace GB.emu
 {
     public class CPU
     {
-        Flags Flags = Flags.ZERO | Flags.CARRY;
+        Flags Flags = 0;
         Registers Regs = new Registers();
         Memory Memory = new Memory();
 
@@ -113,11 +113,6 @@ namespace GB.emu
             {
 
             }
-        }
-
-        private void Reset()
-        {
-            Flags = 0;
         }
 
         private void Set(Flags flags)
