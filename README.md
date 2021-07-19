@@ -5,6 +5,13 @@ This is a prototype gameboy emulator in a very early stage. Progress is slow/non
 Built for education first and performance second. 
 As such accuracy or emulationg every part of the console is of no concern currently.
 
+Graphics are done via the FNA library.
+
+## Setup Repo
+- pull this repository via git or download as zip
+- follow the steps to [include FNA](https://github.com/FNA-XNA/FNA/wiki/1:-Download-and-Update-FNA) into the project file and copy the .dll files into the output
+- you can download the native libs [here](http://fna.flibitijibibo.com/archive/), the link in the wiki is broken
+
 ## Code Conventions
 - any hex ciphers that use letters (i.e. 0xFF, 0xA8) must use the capitalized letter
 - code files relating to emulating the gameboy should be placed under /emu
