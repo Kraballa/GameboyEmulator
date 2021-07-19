@@ -12,6 +12,11 @@ Graphics are done via the FNA library.
 - follow the steps to [include FNA](https://github.com/FNA-XNA/FNA/wiki/1:-Download-and-Update-FNA) into the project file and copy the .dll files into the output
 - you can download the native libs [here](http://fna.flibitijibibo.com/archive/), the link in the wiki is broken
 
+## Helpful Links
+- Game Boy CPU Instruction Table including some short but helpful explanations: (https://meganesulli.com/generate-gb-opcodes/)
+- Game Boy CPU Instruction Table again followed by some basic informations on registers and flags: (https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
+- there are many more resources. will append as I find and use them
+
 ## Code Conventions
 - any hex ciphers that use letters (i.e. 0xFF, 0xA8) must use the capitalized letter
 - code files relating to emulating the gameboy should be placed under /emu
