@@ -10,11 +10,13 @@ namespace GB.emu
         Registers Regs;
         Memory Memory;
         Rom Rom;
+        LCD LCD;
 
         public CPU(Rom rom = null)
         {
             Regs = new Registers();
             Memory = new Memory();
+            LCD = new LCD(Memory);
 
             if (rom == null)
             {
