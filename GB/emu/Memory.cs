@@ -65,22 +65,16 @@ namespace GB.emu
         private byte[] mem = new byte[0x10000];
 
         /// <summary>
-        /// Easy access to memory read and write. Either may be blocked so success is not guaranteed.
+        /// Easy access to memory read and write
         /// </summary>
         public byte this[ushort index]
         {
             get
             {
-                MemoryArea accessed = IsAccessible(index);
-                if (accessed == MemoryArea.VRAM || accessed == MemoryArea.OAM)
-                    return 0xFF;
                 return mem[index];
             }
             set
             {
-                MemoryArea accessed = IsAccessible(index);
-                if (accessed == MemoryArea.VRAM || accessed == MemoryArea.OAM)
-                    return;
                 mem[index] = value;
                 if (MemoryAccessCallback.ContainsKey(index))
                     MemoryAccessCallback[index].Invoke(value);
