@@ -20,7 +20,7 @@ namespace GB.emu
         BGWinTileDataSel = 0b00010000,
         BGTileMapDisplaySel = 0b00001000,
         OBJSize = 0b00000100,
-        OBJDisplayENable = 0b00000010,
+        OBJDisplayEnable = 0b00000010,
         BGDisplay = 0b00000001
     }
 
@@ -57,18 +57,6 @@ namespace GB.emu
             HookToMemory();
         }
 
-        /// <summary>
-        /// Load sprite data from ROM or RAM to OAM (sprite attribute table)
-        /// </summary>
-        public void OamDmaTransfer()
-        {
-            ushort start = (ushort)(Memory[DMA] << 8);
-            for (ushort offset = 0x00; offset < 0x9F; offset++)
-            {
-                Memory[(ushort)(Memory.OAM | offset)] = Memory[(ushort)(start | offset)];
-            }
-        }
-
         public int GetMode()
         {
             return Memory[LCDS] & (byte)LCDSReg.Mode;
@@ -78,6 +66,18 @@ namespace GB.emu
         {
             //when this location is written to, transfer sprite data from ROM or RAM to OAM
             Memory.MemoryAccessCallback.Add(DMA, OamDmaTransfer);
+        }
+
+        /// <summary>
+        /// Load sprite data from ROM or RAM to OAM (sprite attribute table)
+        /// </summary>
+        private void OamDmaTransfer(byte written)
+        {
+            ushort start = (ushort)(written << 8);
+            for (ushort offset = 0x00; offset < 0x9F; offset++)
+            {
+                Memory[(ushort)(Memory.OAM | offset)] = Memory[(ushort)(start | offset)];
+            }
         }
     }
 }

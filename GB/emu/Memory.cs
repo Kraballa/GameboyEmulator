@@ -49,7 +49,7 @@ namespace GB.emu
         public const ushort IFREG = 0xFF0F; //Interrupt Request Register
         public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
 
-        public Dictionary<ushort, Action> MemoryAccessCallback = new Dictionary<ushort, Action>();
+        public Dictionary<ushort, Action<byte>> MemoryAccessCallback = new Dictionary<ushort, Action<byte>>();
 
         public byte IE
         {
@@ -83,7 +83,7 @@ namespace GB.emu
                     return;
                 mem[index] = value;
                 if (MemoryAccessCallback.ContainsKey(index))
-                    MemoryAccessCallback[index].Invoke();
+                    MemoryAccessCallback[index].Invoke(value);
             }
         }
 
