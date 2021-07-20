@@ -20,6 +20,7 @@ namespace GB.emu
         Memory Memory;
         Rom Rom;
         Display LCD;
+        Input Input;
         private int Clock = 0;
 
         public CPU(Rom rom = null)
@@ -27,6 +28,7 @@ namespace GB.emu
             Regs = new Registers();
             Memory = new Memory();
             LCD = new Display(Memory);
+            Input = new Input(Memory);
 
             if (rom == null)
             {
