@@ -4,8 +4,17 @@ using System.Text;
 
 namespace GB.emu
 {
+    public enum OCHandleMode
+    {
+        ERROR,
+        PRINT,
+        NOTHING
+    }
+
     public class CPU
     {
+        public OCHandleMode OCHandleMode = OCHandleMode.ERROR;
+
         Flags Flags = 0;
         Registers Regs;
         Memory Memory;
@@ -34,7 +43,7 @@ namespace GB.emu
             return Memory[Regs.PC++];
         }
 
-        protected void Execute(byte opcode)
+        protected virtual void Execute(byte opcode)
         {
             uint HighBit = (uint)(opcode >> 4);
             byte Data = 0;
@@ -200,12 +209,17 @@ namespace GB.emu
                     break;
                 #endregion
 
-                default:
-#if DEBUG
-                    throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
-#else
-                    Console.WriteLine("unknown opcode: {0:X}", opcode);
-#endif
+                default: //unknown opcode
+                    switch (OCHandleMode)
+                    {
+                        case OCHandleMode.ERROR:
+                            throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
+                        case OCHandleMode.PRINT:
+                            Console.WriteLine("unknown opcode: {0:X}", opcode);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
             }
         }
@@ -214,12 +228,17 @@ namespace GB.emu
         {
             switch (opcode)
             {
-                default:
-#if DEBUG
-                    throw new Exception(string.Format("unknown opcode (0xCB): {0:X}", opcode));
-#else
-                    Console.WriteLine("unknown opcode (0xCB): {0:X}", opcode);
-#endif
+                default: //unknown opcode
+                    switch (OCHandleMode)
+                    {
+                        case OCHandleMode.ERROR:
+                            throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
+                        case OCHandleMode.PRINT:
+                            Console.WriteLine("unknown opcode: {0:X}", opcode);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
             }
         }
@@ -242,6 +261,17 @@ namespace GB.emu
         private bool IsSet(Flags flag)
         {
             return (Flags & flag) == flag;
+        }
+
+        public void PrintDebugInfo()
+        {
+            Console.WriteLine("- Gameboy CPU debug info -");
+            Console.Write("flags: ");
+            Console.Write("{0}", IsSet(Flags.ZERO) ? "Z" : "-");
+            Console.Write("{0}", IsSet(Flags.SUB) ? "N" : "-");
+            Console.Write("{0}", IsSet(Flags.HCARRY) ? "H" : "-");
+            Console.Write("{0}", IsSet(Flags.CARRY) ? "C" : "-");
+            Console.WriteLine("----");
         }
     }
 }

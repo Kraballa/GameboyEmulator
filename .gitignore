@@ -5,3 +5,7 @@
 /.vs/GB
 /bin/Debug/netcoreapp3.1
 /obj
+/GB/bin/Debug/netcoreapp3.1
+/GB/obj
+/GBTesting/bin/Debug/netcoreapp3.1
+/GBTesting/obj

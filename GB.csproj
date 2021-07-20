@@ -6,11 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Documents\Sources\Lib\FNA\FNA.csproj" />
+    <Compile Remove="data\**" />
+    <EmbeddedResource Remove="data\**" />
+    <None Remove="data\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="data\" />
+    <ProjectReference Include="..\..\..\Documents\Sources\Lib\FNA\FNA.csproj" />
   </ItemGroup>
 
 </Project>
