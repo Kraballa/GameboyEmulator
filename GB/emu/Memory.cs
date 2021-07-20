@@ -44,13 +44,34 @@ namespace GB.emu
 
         public byte this[ushort index]
         {
-            get => mem[index];
+            get
+            {
+                if (!IsAccessible(index))
+                    return 0xFF;
+                return mem[index];
+            }
             set
             {
+                if (!IsAccessible(index))
+                    return;
                 mem[index] = value;
                 if (MemoryAccessCallback.ContainsKey(index))
                     MemoryAccessCallback[index].Invoke();
             }
+        }
+
+        public bool IsAccessible(ushort address)
+        {
+            byte vramMode = (byte)(this[Display.LCDS] & (byte)LCDSReg.Mode);
+            //VRAM is only accessible in modes 0-2
+            if (vramMode < 3 && address >= VRAM && address < ExRAM)
+                return false;
+
+            //OAM is only accessible in modes 0-1
+            if ((vramMode & 0b10) == 0 && address >= OAM && address < HiRAM)
+                return false;
+
+            return true;
         }
     }
 }
