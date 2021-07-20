@@ -59,6 +59,9 @@ namespace GB.emu
 
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
 
+        //only use for reading VRAM, OAM or Debugging
+        public byte[] Mem { get => mem; }
+
         private byte[] mem = new byte[0x10000];
 
         /// <summary>
