@@ -82,10 +82,9 @@ namespace GB.emu
                 #region JR NX, s8
                 case 0x20:
                     Cycles = 2;
-                    if (IsSet(Flags.ZERO))
+                    if (!IsSet(Flags.ZERO))
                     {
-                        ushort instr = (ushort)(Regs.PC - 1);
-                        Regs.PC = (ushort)(instr + Fetch());
+                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
                         Cycles++;
                     }
                     break;
@@ -93,8 +92,7 @@ namespace GB.emu
                     Cycles = 2;
                     if (!IsSet(Flags.CARRY))
                     {
-                        ushort instr = (ushort)(Regs.PC - 1);
-                        Regs.PC = (ushort)(instr + Fetch());
+                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
                         Cycles++;
                     }
                     break;
@@ -206,6 +204,86 @@ namespace GB.emu
                     Regs.A |= (byte)(IsSet(Flags.CARRY) ? 1 : 0); // write CY to A0
                     FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A7 to CY
                     Cycles = 1;
+                    break;
+                #endregion
+
+                case 0x27:
+                    //TODO
+                    break;
+
+                case 0x37:
+                    FlushFlags(Flags.CARRY | (Flags & Flags.ZERO)); //corresponds to -001 i.e. ignore zero, set Carry, rest 0
+                    Cycles = 1;
+                    break;
+
+                case 0x08:
+                    ushort address = (ushort)((Fetch() << 8) | Fetch());
+                    Memory[address] = Regs.GetLow(4);
+                    Memory[address] = Regs.GetHigh(4);
+                    Cycles = 5;
+                    break;
+
+                #region JR [0|Z|C], s8
+                case 0x18:
+                    Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                    Cycles = 3;
+                    break;
+                case 0x28:
+                    Cycles = 2;
+                    if (IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Cycles++;
+                    }
+                    break;
+                case 0x38:
+                    Cycles = 2;
+                    if (IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Cycles++;
+                    }
+                    break;
+                #endregion
+
+                #region ADD HL, XY
+                case 0x09:
+                case 0x19:
+                case 0x29:
+                case 0x39:
+                    if (Regs.HL + Regs[HighBit + 1] > ushort.MaxValue)
+                        Set(Flags.CARRY | Flags.HCARRY);
+                    else
+                        Unset(Flags.CARRY | Flags.HCARRY);
+                    Regs.HL += Regs[HighBit + 1];
+                    Unset(Flags.SUB);
+                    Cycles = 2;
+                    break;
+                #endregion
+
+                #region LD A, (XY)
+                case 0x0A:
+                case 0x1A:
+                    Regs.A = Memory[Regs[HighBit + 1]];
+                    Cycles = 2;
+                    break;
+                case 0x2A:
+                    Regs.A = Memory[Regs.HL++];
+                    Cycles = 2;
+                    break;
+                case 0x3A:
+                    Regs.A = Memory[Regs.HL--];
+                    Cycles = 2;
+                    break;
+                #endregion
+
+                #region DEC XY
+                case 0x0B:
+                case 0x1B:
+                case 0x2B:
+                case 0x3B:
+                    Regs[HighBit + 1]--;
+                    Cycles = 2;
                     break;
                 #endregion
 
