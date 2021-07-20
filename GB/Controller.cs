@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace GB
@@ -22,6 +23,7 @@ namespace GB
             IsMouseVisible = true;
             Graphics = new GraphicsDeviceManager(this);
             CPU = new CPU();
+            CPU.OCHandleMode = OCHandleMode.NOTHING;
         }
 
         protected override void Initialize()
@@ -38,11 +40,26 @@ namespace GB
             MInput.Initialize();
         }
 
+        int count = 0;
+        Stopwatch Stopwatch = new Stopwatch();
+
         protected override void Update(GameTime gameTime)
         {
             MInput.Update();
             KInput.Update();
-            //update cpu...
+
+
+            Stopwatch.Start();
+            CPU.Step();
+            Stopwatch.Stop();
+            count++;
+            if (count == 60)
+            {
+                Window.Title = string.Format("average cycle time: {0}ms / 16.667ms", (double)Stopwatch.ElapsedMilliseconds / 60d);
+                Stopwatch.Reset();
+                count = 0;
+            }
+
             base.Update(gameTime);
         }
 

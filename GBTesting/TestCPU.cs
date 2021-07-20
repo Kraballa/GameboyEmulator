@@ -56,11 +56,11 @@ namespace GBTesting
             }
         }
 
-        protected override void Execute(byte opcode)
+        protected override int Execute(byte opcode)
         {
             if (ReportOpcodes)
                 Console.WriteLine("opcode: {0:X}", opcode);
-            base.Execute(opcode);
+            return base.Execute(opcode);
         }
 
         public void InjectOpcode(byte opcode)

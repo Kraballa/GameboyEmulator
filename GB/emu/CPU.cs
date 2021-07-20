@@ -38,12 +38,26 @@ namespace GB.emu
             //TODO: load first rom bank into memory
         }
 
+        /// <summary>
+        /// one frame, as in the period between 2 VBlanks
+        /// 
+        /// Occurs every 70224 clocks, VBlank last 4560.
+        /// </summary>
+        public void Step()
+        {
+            int Clocks = 0;
+            while (Clocks < 70224)
+            {
+                Clocks += Execute(Fetch());
+            }
+        }
+
         protected virtual byte Fetch()
         {
             return Memory[Regs.PC++];
         }
 
-        protected virtual void Execute(byte opcode)
+        protected virtual int Execute(byte opcode)
         {
             uint HighBit = (uint)(opcode >> 4);
             byte Data = 0;
@@ -300,6 +314,7 @@ namespace GB.emu
                     }
                     break;
             }
+            return Cycles;
         }
 
         private void Execute16BitOpcodes(byte opcode) //always prefixed with 'CB'
