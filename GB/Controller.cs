@@ -31,8 +31,8 @@ namespace GB
             base.Initialize();
 
             Graphics.PreferMultiSampling = true;
-            Graphics.PreferredBackBufferWidth = 1280;
-            Graphics.PreferredBackBufferHeight = 720;
+            Graphics.PreferredBackBufferWidth = Config.ScreenWidth * Config.Scale;
+            Graphics.PreferredBackBufferHeight = Config.ScreenHeight * Config.Scale;
             Graphics.ApplyChanges();
 
             Render.Initialize(GraphicsDevice);
@@ -55,7 +55,7 @@ namespace GB
             count++;
             if (count == 60)
             {
-                Window.Title = string.Format("average cycle time: {0}ms / 16.667ms", (double)Stopwatch.ElapsedMilliseconds / 60d);
+                Window.Title = string.Format("average cycle time: {0}ms / 16.667ms", (int)Math.Round(Stopwatch.ElapsedMilliseconds / 60d));
                 Stopwatch.Reset();
                 count = 0;
             }
