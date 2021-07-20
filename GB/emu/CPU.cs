@@ -20,6 +20,7 @@ namespace GB.emu
         Memory Memory;
         Rom Rom;
         Display LCD;
+        private int Clock = 0;
 
         public CPU(Rom rom = null)
         {
@@ -45,11 +46,12 @@ namespace GB.emu
         /// </summary>
         public void Step()
         {
-            int Clocks = 0;
-            while (Clocks < 70224)
+            while (Clock < 70224)
             {
-                Clocks += Execute(Fetch());
+                //not accurate
+                Clock += Execute(Fetch());
             }
+            Clock -= 70224;
         }
 
         protected virtual byte Fetch()
