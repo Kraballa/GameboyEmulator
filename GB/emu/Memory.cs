@@ -59,7 +59,7 @@ namespace GB.emu
 
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
 
-        private byte[] mem = new byte[0xFFFF];
+        private byte[] mem = new byte[0x10000];
 
         /// <summary>
         /// Easy access to memory read and write. Either may be blocked so success is not guaranteed.
@@ -90,7 +90,7 @@ namespace GB.emu
         /// <returns>any if it's accesssible, the designated memory area if not</returns>
         public MemoryArea IsAccessible(ushort address)
         {
-            byte vramMode = (byte)(this[Display.LCDS] & (byte)LCDSReg.Mode);
+            byte vramMode = (byte)(mem[Display.LCDS] & (byte)LCDSReg.Mode);
             //VRAM is only accessible in modes 0-2
             if (vramMode < 3 && GetMemoryArea(address) == MemoryArea.VRAM)
                 return MemoryArea.VRAM;
