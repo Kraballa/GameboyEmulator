@@ -29,37 +29,67 @@ namespace GB.emu
             //TODO: load first rom bank into memory
         }
 
-        private byte Fetch()
+        protected virtual byte Fetch()
         {
             return Memory[Regs.PC++];
         }
 
-        private void Execute(byte opcode)
+        protected void Execute(byte opcode)
         {
             uint HighBit = (uint)(opcode >> 4);
+            byte Data = 0;
+            int Cycles = 0;
 
             switch (opcode)
             {
                 #region Special Operations
                 case 0x00: //NOP
                     //do nothing
+                    Cycles = 1;
                     break;
                 case 0x10: //STOP
                     //TODO
+                    Fetch();
+                    Cycles = 1;
                     break;
                 case 0xF3: //Disable Interrupts via Interrupt Master Enable Flag
                     Memory.IMEF = false;
+                    Cycles = 1;
                     break;
                 case 0xFB: //Enable Interrupts via Interrupt Master Enable Flag
                     Memory.IMEF = true;
+                    Cycles = 1;
                     break;
                 case 0xD9: //RETI
                     Memory.IMEF = true;
                     //TODO: same code as RET
+                    Cycles = 4;
                     break;
                 case 0xCB:
                     Execute16BitOpcodes(Fetch());
                     break;
+                #endregion
+
+                #region JR NX, s8
+                case 0x20:
+                    Cycles = 2;
+                    if (IsSet(Flags.ZERO))
+                    {
+                        ushort instr = (ushort)(Regs.PC - 1);
+                        Regs.PC = (ushort)(instr + Fetch());
+                        Cycles++;
+                    }
+                    break;
+                case 0x30:
+                    Cycles = 2;
+                    if (!IsSet(Flags.CARRY))
+                    {
+                        ushort instr = (ushort)(Regs.PC - 1);
+                        Regs.PC = (ushort)(instr + Fetch());
+                        Cycles++;
+                    }
+                    break;
+
                 #endregion
 
                 #region LD XY, d16
@@ -68,6 +98,7 @@ namespace GB.emu
                 case 0x21:
                 case 0x31:
                     Regs[HighBit + 1] = (ushort)(Fetch() | Fetch() << 8);
+                    Cycles = 3;
                     break;
                 #endregion
 
@@ -75,12 +106,15 @@ namespace GB.emu
                 case 0x02:
                 case 0x12:
                     Memory[Regs[HighBit + 1]] = Regs.A;
+                    Cycles = 2;
                     break;
                 case 0x22:
                     Memory[Regs.HL++] = Regs.A;
+                    Cycles = 2;
                     break;
                 case 0x32:
                     Memory[Regs.HL--] = Regs.A;
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -90,6 +124,7 @@ namespace GB.emu
                 case 0x23:
                 case 0x33:
                     Regs[HighBit + 1]++;
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -101,12 +136,14 @@ namespace GB.emu
                     Unset(Flags.SUB);
                     if (Regs.GetHigh(HighBit + 1) == 0)
                         Set(Flags.ZERO | Flags.HCARRY);
+                    Cycles = 1;
                     break;
                 case 0x34:
                     Memory[Regs.HL]++;
                     Unset(Flags.SUB);
                     if (Regs.B == 0)
                         Set(Flags.ZERO | Flags.HCARRY);
+                    Cycles = 3;
                     break;
                 #endregion
 
@@ -120,6 +157,7 @@ namespace GB.emu
                     Set(Flags.SUB);
                     if (Regs.GetHigh(HighBit + 1) == 0)
                         Set(Flags.ZERO);
+                    Cycles = 1;
                     break;
                 case 0x35:
                     if (Memory[Regs.HL] == 0)
@@ -128,8 +166,47 @@ namespace GB.emu
                     Set(Flags.SUB);
                     if (Memory[Regs.HL] == 0)
                         Set(Flags.ZERO);
+                    Cycles = 3;
                     break;
-                    #endregion
+                #endregion
+
+                #region LD X, d8
+                case 0x06:
+                case 0x16:
+                case 0x26:
+                    Regs.SetHigh(HighBit + 1, Fetch());
+                    Cycles = 2;
+                    break;
+                case 0x36:
+                    Memory[Regs.HL] = Fetch();
+                    Cycles = 3;
+                    break;
+                #endregion
+
+                #region RL(C)A
+                case 0x07:
+                    Data = (byte)(Regs.A >> 7);
+                    Regs.A <<= 1;
+                    Regs.A |= Data;
+                    FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A7 to CY
+                    Cycles = 1;
+                    break;
+                case 0x17:
+                    Data = (byte)(Regs.A >> 7);
+                    Regs.A <<= 1;
+                    Regs.A |= (byte)(IsSet(Flags.CARRY) ? 1 : 0); // write CY to A0
+                    FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A7 to CY
+                    Cycles = 1;
+                    break;
+                #endregion
+
+                default:
+#if DEBUG
+                    throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
+#else
+                    Console.WriteLine("unknown opcode: {0:X}", opcode);
+#endif
+                    break;
             }
         }
 
@@ -137,8 +214,19 @@ namespace GB.emu
         {
             switch (opcode)
             {
-
+                default:
+#if DEBUG
+                    throw new Exception(string.Format("unknown opcode (0xCB): {0:X}", opcode));
+#else
+                    Console.WriteLine("unknown opcode (0xCB): {0:X}", opcode);
+#endif
+                    break;
             }
+        }
+
+        private void FlushFlags(Flags flags = 0)
+        {
+            Flags = flags;
         }
 
         private void Set(Flags flags)
