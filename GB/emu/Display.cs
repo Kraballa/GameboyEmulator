@@ -12,7 +12,7 @@ namespace GB.emu
         Black = 0b11000000
     }
 
-    public class LCD
+    public class Display
     {
         public const ushort SCY = 0xFF42; //bg map scroll y
         public const ushort SCX = 0xFF43; //bg map scroll x
@@ -25,7 +25,7 @@ namespace GB.emu
         //need access to memory to write to and read from
         private Memory Memory;
 
-        public LCD(Memory memory)
+        public Display(Memory memory)
         {
             Memory = memory;
 
