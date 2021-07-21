@@ -23,16 +23,34 @@ namespace GBTesting
         private Queue<byte> TestData = new Queue<byte>();
         private Random Random = new Random();
 
-        public TestCPU(Rom rom = null) : base(rom)
+        public TestCPU(Rom rom) : base(rom)
         {
             OCHandleMode = OCHandleMode.PRINT;
         }
 
-        public void LoadTestData(params byte[] data)
+        /// <summary>
+        /// Inject code to be evaluated before further polling from the rom
+        /// </summary>
+        public TestCPU LoadTestData(params byte[] data)
         {
             for (int i = 0; i < data.Length; i++)
             {
                 TestData.Enqueue(data[i]);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Run opcodes until either NOP, STOP or HALT is called
+        /// </summary>
+        public void Run()
+        {
+            bool run = true;
+            while (run)
+            {
+                Execute(Fetch());
+                if (CPUMode != CPUMode.NORMAL)
+                    run = false;
             }
         }
 
@@ -57,15 +75,19 @@ namespace GBTesting
 
         protected override int Execute(byte opcode)
         {
-            if (ReportOpcodes)
-                Console.WriteLine("opcode: {0:X}", opcode);
-            return base.Execute(opcode);
+            if (opcode == 0xCB) //16bit opcode
+            {
+                opcode = Fetch();
+                if (ReportOpcodes)
+                    Console.WriteLine("opcode [16bit]: 0xCB{0:X}", opcode);
+                return base.Execute16Bit(opcode);
+            }
+            else
+            {
+                if (ReportOpcodes)
+                    Console.WriteLine("opcode  [8bit]: 0x{0:X}", opcode);
+                return base.Execute(opcode);
+            }
         }
-
-        public void InjectOpcode(byte opcode)
-        {
-            Execute(opcode);
-        }
-
     }
 }
