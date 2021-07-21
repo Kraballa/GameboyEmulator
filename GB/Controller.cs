@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace GB
@@ -16,14 +17,27 @@ namespace GB
 
         public CPU CPU;
 
+        private string Title = "";
+
         public Controller() : base()
         {
             Instance = this;
-            Content.RootDirectory = "Content";
             IsMouseVisible = true;
             Graphics = new GraphicsDeviceManager(this);
-            CPU = new CPU();
+            Title = "Gameboy";
+            Window.Title = Title;
+        }
+
+        public void LoadRom(Rom rom)
+        {
+            CPU = new CPU(rom);
             CPU.OCHandleMode = OCHandleMode.NOTHING;
+        }
+
+        public void LoadRom(string path)
+        {
+            Rom rom = new Rom(path);
+            LoadRom(rom);
         }
 
         protected override void Initialize()
@@ -47,15 +61,13 @@ namespace GB
         {
             MInput.Update();
             KInput.Update();
-
-
             Stopwatch.Start();
             CPU.Step();
             Stopwatch.Stop();
             count++;
             if (count == 60)
             {
-                Window.Title = string.Format("average cycle time: {0}ms / 16.667ms", (int)Math.Round(Stopwatch.ElapsedMilliseconds / 60d));
+                Window.Title = Title + string.Format(" - {0}%", Math.Round(Stopwatch.ElapsedMilliseconds / 60d / 16.6667d * 100));
                 Stopwatch.Reset();
                 count = 0;
             }

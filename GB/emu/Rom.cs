@@ -15,14 +15,15 @@ namespace GB.emu
         {
             if (!File.Exists(path))
             {
-                throw new Exception("error, file not found");
+                throw new Exception(string.Format("error, rom file not found: {0}", path));
             }
 
-            if (new FileInfo(path).Length > 8388608) //2^23 = 8.388.608 -> 8MiB. max gameboy size and safety measure
+            FileInfo info = new FileInfo(path);
+            if (info.Length > 8388608) //2^23 = 8.388.608 -> 8MiB. max gameboy size and safety measure
             {
                 throw new Exception("error, file too big");
             }
-
+            Console.WriteLine("loading {0}", info.Name);
             Data = File.ReadAllBytes(path);
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using GB.emu;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace GB
@@ -7,8 +8,19 @@ namespace GB
     {
         static void Main(string[] args)
         {
-            using (var g = new Controller())
-                g.Run();
+            Controller cont;
+            if (args.Length >= 1)
+            {
+                cont = new Controller();
+                cont.LoadRom(args[0]);
+            }
+            else
+            {
+                cont = new Controller();
+                cont.LoadRom(Rom.Empty);
+            }
+            cont.Run();
+            cont.Dispose();
         }
     }
 }

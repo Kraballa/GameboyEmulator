@@ -23,21 +23,13 @@ namespace GB.emu
         Input Input;
         private int Clock = 0;
 
-        public CPU(Rom rom = null)
+        public CPU(Rom rom)
         {
             Regs = new Registers();
             Memory = new Memory();
             LCD = new Display(Memory);
             Input = new Input(Memory);
-
-            if (rom == null)
-            {
-                Rom = Rom.Empty;
-            }
-            else
-            {
-                Rom = rom;
-            }
+            Rom = rom;
             //TODO: load first rom bank into memory
         }
 
