@@ -100,6 +100,28 @@ namespace GB.emu
             regs[index] = (ushort)(value | (regs[index] & 0xf0));
         }
 
+        public byte GetByteByIndex(uint index)
+        {
+            switch (index)
+            {
+                default:
+                case 0:
+                    return A;
+                case 1:
+                    return B;
+                case 2:
+                    return C;
+                case 3:
+                    return D;
+                case 4:
+                    return E;
+                case 5:
+                    return H;
+                case 6:
+                    return L;
+            }
+        }
+
         public ushort this[uint index]
         {
             get => regs[index];
