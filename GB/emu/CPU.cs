@@ -248,6 +248,7 @@ namespace GB.emu
                         if (IsSet(Flags.HCARRY))
                             Regs.A -= 0x6;
                     }
+                    Cycles = 1;
                     Place(Regs.A == 0, Flags.ZERO);
                     Unset(Flags.HCARRY);
                     break;
