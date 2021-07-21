@@ -25,7 +25,7 @@ namespace GBTesting
 
         public TestCPU(Rom rom) : base(rom)
         {
-            OCHandleMode = OCHandleMode.PRINT;
+            OCErrorMode = OCErrorMode.PRINT;
         }
 
         /// <summary>
@@ -40,10 +40,16 @@ namespace GBTesting
             return this;
         }
 
+        public TestCPU ClearTestData()
+        {
+            TestData.Clear();
+            return this;
+        }
+
         /// <summary>
-        /// Run opcodes until either NOP, STOP or HALT is called
+        /// Run opcodes until either STOP or HALT is called
         /// </summary>
-        public void Run()
+        public TestCPU Run()
         {
             bool run = true;
             while (run)
@@ -52,6 +58,7 @@ namespace GBTesting
                 if (CPUMode != CPUMode.NORMAL)
                     run = false;
             }
+            return this;
         }
 
         protected override byte Fetch()

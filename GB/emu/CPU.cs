@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GB.emu
 {
-    public enum OCHandleMode
+    public enum OCErrorMode
     {
         ERROR,
         PRINT,
@@ -20,7 +20,7 @@ namespace GB.emu
 
     public class CPU
     {
-        public OCHandleMode OCHandleMode = OCHandleMode.ERROR;
+        public OCErrorMode OCErrorMode = OCErrorMode.ERROR;
 
         public Flags Flags = 0;
         public Registers Regs;
@@ -75,7 +75,6 @@ namespace GB.emu
             {
                 #region Special Operations
                 case 0x00: //NOP
-                    //do nothing
                     Cycles = 1;
                     break;
                 case 0x10: //STOP
@@ -184,21 +183,17 @@ namespace GB.emu
                 case 0x05:
                 case 0x15:
                 case 0x25:
-                    if (Regs.GetHigh(HighBit + 1) == 0)
-                        Set(Flags.HCARRY);
+                    Place(Regs.GetHigh(HighBit + 1) == 0, Flags.HCARRY);
                     Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) - 1)); //--
                     Set(Flags.SUB);
-                    if (Regs.GetHigh(HighBit + 1) == 0)
-                        Set(Flags.ZERO);
+                    Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x35:
-                    if (Memory[Regs.HL] == 0)
-                        Set(Flags.HCARRY);
+                    Place(Memory[Regs.HL] == 0, Flags.HCARRY);
                     Memory[Regs.HL]--;
                     Set(Flags.SUB);
-                    if (Memory[Regs.HL] == 0)
-                        Set(Flags.ZERO);
+                    Place(Memory[Regs.HL] == 0, Flags.ZERO);
                     Cycles = 3;
                     break;
                 #endregion
@@ -233,8 +228,28 @@ namespace GB.emu
                     break;
                 #endregion
 
-                case 0x27:
-                    //TODO
+                case 0x27: //DAA. see https://forums.nesdev.com/viewtopic.php?t=15944
+                    if (!IsSet(Flags.SUB))
+                    {
+                        if (IsSet(Flags.CARRY) || Regs.A > 0x99)
+                        {
+                            Regs.A += 0x60;
+                            Set(Flags.CARRY);
+                        }
+                        if (IsSet(Flags.HCARRY) || (Regs.A & 0x0F) > 0x09)
+                        {
+                            Regs.A += 0x6;
+                        }
+                    }
+                    else
+                    {
+                        if (IsSet(Flags.CARRY))
+                            Regs.A -= 0x60;
+                        if (IsSet(Flags.HCARRY))
+                            Regs.A -= 0x6;
+                    }
+                    Place(Regs.A == 0, Flags.ZERO);
+                    Unset(Flags.HCARRY);
                     break;
 
                 case 0x37:
@@ -277,10 +292,7 @@ namespace GB.emu
                 case 0x19:
                 case 0x29:
                 case 0x39:
-                    if (Regs.HL + Regs[HighBit + 1] > ushort.MaxValue)
-                        Set(Flags.CARRY | Flags.HCARRY);
-                    else
-                        Unset(Flags.CARRY | Flags.HCARRY);
+                    Place(Regs.HL + Regs[HighBit + 1] > ushort.MaxValue, Flags.CARRY | Flags.HCARRY);
                     Regs.HL += Regs[HighBit + 1];
                     Unset(Flags.SUB);
                     Cycles = 2;
@@ -313,6 +325,81 @@ namespace GB.emu
                     break;
                 #endregion
 
+                #region INC Y
+                case 0x0C:
+                case 0x1C:
+                case 0x2C:
+                    Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) + 1)); //++
+                    Unset(Flags.SUB);
+                    Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO | Flags.HCARRY);
+                    Cycles = 1;
+                    break;
+                case 0x3C:
+                    Regs.A++;
+                    Unset(Flags.SUB);
+                    Place(Regs.A == 0, Flags.ZERO | Flags.HCARRY);
+                    Cycles = 1;
+                    break;
+                #endregion
+
+                #region DEC Y
+                case 0x0D:
+                case 0x1D:
+                case 0x2D:
+                    Place(Regs.GetLow(HighBit + 1) == 0, Flags.HCARRY);
+                    Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) - 1)); //--
+                    Set(Flags.SUB);
+                    Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO);
+                    Cycles = 1;
+                    break;
+                case 0x3D:
+                    Place(Regs.A == 0, Flags.HCARRY);
+                    Regs.A--;
+                    Set(Flags.SUB);
+                    Place(Regs.A == 0, Flags.ZERO);
+                    Cycles = 1;
+                    break;
+                #endregion
+
+                #region LD Y, d8
+                case 0x0E:
+                case 0x1E:
+                case 0x2E:
+                    Regs.SetLow(HighBit + 1, Fetch());
+                    Cycles = 2;
+                    break;
+                case 0x3E:
+                    Regs.A = Fetch();
+                    Cycles = 2;
+                    break;
+                #endregion
+
+                #region RR(C)A
+                case 0x0F:
+                    Data = (byte)(Regs.A & 0x1);
+                    Regs.A >>= 1;
+                    Regs.A |= (byte)(Data << 7);
+                    FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A0 to CY
+                    Cycles = 1;
+                    break;
+                case 0x1F:
+                    Data = (byte)(Regs.A & 0x1);
+                    Regs.A >>= 1;
+                    FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A0 to CY
+                    Cycles = 1;
+                    break;
+                #endregion
+
+                case 0x2F:
+                    Regs.A ^= 0b11111111; //flip all bits
+                    Set(Flags.SUB | Flags.HCARRY);
+                    Cycles = 1;
+                    break;
+                case 0x3F:
+                    Unset(Flags.SUB | Flags.HCARRY);
+                    Flags ^= Flags.CARRY;
+                    break;
+
                 default: //unknown opcode
                     HandleUnknownOpcode(opcode);
                     break;
@@ -337,6 +424,18 @@ namespace GB.emu
             Flags = flags;
         }
 
+        private void Place(bool value, Flags flag)
+        {
+            if (value)
+            {
+                Set(flag);
+            }
+            else
+            {
+                Unset(flag);
+            }
+        }
+
         private void Set(Flags flags)
         {
             Flags |= flags;
@@ -354,12 +453,12 @@ namespace GB.emu
 
         private void HandleUnknownOpcode(byte opcode)
         {
-            switch (OCHandleMode)
+            switch (OCErrorMode)
             {
-                case OCHandleMode.ERROR:
-                    throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
-                case OCHandleMode.PRINT:
-                    Console.WriteLine("unknown opcode: {0:X}", opcode);
+                case OCErrorMode.ERROR:
+                    throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode));
+                case OCErrorMode.PRINT:
+                    Console.WriteLine("unknown opcode: 0x{0:X}", opcode);
                     break;
                 default:
                     break;

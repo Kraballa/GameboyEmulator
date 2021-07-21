@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GB.emu;
+using System;
 
 namespace GBTesting
 {
@@ -8,7 +9,20 @@ namespace GBTesting
         {
             Console.WriteLine("emulator testing");
 
-            new BasicTests().Test8BitLDDEC();
+            PrintUnknownOpcodes();
+
+            //new BasicTests().Test8BitLDDEC();
+        }
+
+        private static void PrintUnknownOpcodes()
+        {
+            TestCPU cpu = new TestCPU(Rom.Empty);
+            cpu.OCErrorMode = OCErrorMode.PRINT;
+            //cpu.ReportOpcodes = true;
+            for (byte opcode = 0x00; opcode <= 0x3F; opcode++)
+            {
+                cpu.LoadTestData(opcode, 0x10).Run().ClearTestData();
+            }
         }
     }
 }
