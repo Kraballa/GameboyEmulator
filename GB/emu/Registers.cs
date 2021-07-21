@@ -105,5 +105,17 @@ namespace GB.emu
             get => regs[index];
             set => regs[index] = value;
         }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(string.Format("A: 0x{0:X}", A));
+            sb.AppendLine(string.Format("BC: 0x{0:X}", BC));
+            sb.AppendLine(string.Format("DE: 0x{0:X}", DE));
+            sb.AppendLine(string.Format("HL: 0x{0:X}", HL));
+            sb.AppendLine(string.Format("SP: 0x{0:X}", SP));
+            sb.Append(string.Format("PC: 0x{0:X}", PC));
+            return sb.ToString();
+        }
     }
 }
