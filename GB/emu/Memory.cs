@@ -96,7 +96,8 @@ namespace GB.emu
         }
 
         /// <summary>
-        /// Get the memory area that is being accessed. TODO: replace with Range Tree or similar efficient data structure
+        /// Get the memory area that is being accessed. SLOW
+        /// TODO: replace with Range Tree or similar efficient data structure
         /// </summary>
         public MemoryArea GetMemoryArea(ushort index)
         {
