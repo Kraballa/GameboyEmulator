@@ -75,6 +75,11 @@ namespace GB
                 Count = 0;
             }
 
+            if (KInput.CheckPressed(Keys.F1))
+            {
+                Console.WriteLine(CPU.FlagsToString() + " - PC: 0x{0:X} - rom: {1}", CPU.Regs.PC, CPU.Rom.Header.Title);
+            }
+
             base.Update(gameTime);
         }
 
