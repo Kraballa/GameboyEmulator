@@ -36,7 +36,6 @@ namespace GBTesting
             }
         }
 
-
         protected override byte Fetch()
         {
             if (TestData.Count > 0)

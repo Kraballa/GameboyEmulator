@@ -11,13 +11,15 @@ namespace GB
 {
     public class Controller : Game
     {
-        public static Controller Instance;
+        //amount of frames to take the average of
+        const int NumFrames = 30;
 
-        private GraphicsDeviceManager Graphics;
+        public static Controller Instance;
 
         public CPU CPU;
 
-        private string Title = "";
+        private GraphicsDeviceManager Graphics;
+        private string Title;
 
         public Controller() : base()
         {
@@ -65,9 +67,12 @@ namespace GB
             CPU.Step();
             Stopwatch.Stop();
             count++;
-            if (count == 60)
+            if (count == NumFrames)
             {
-                Window.Title = Title + string.Format(" - {0}%", Math.Round(Stopwatch.ElapsedMilliseconds / 60d / 16.6667d * 100));
+                float executionTime = Stopwatch.ElapsedMilliseconds / (float)NumFrames / 16.6667f;
+                float speed = 100 / Math.Max(1, executionTime);
+
+                Window.Title = Title + string.Format(" - speed: {0,4}%, exetime: {1,4}%", speed, executionTime * 100);
                 Stopwatch.Reset();
                 count = 0;
             }

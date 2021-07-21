@@ -21,6 +21,7 @@ namespace GB.emu
         Rom Rom;
         Display LCD;
         Input Input;
+
         private int Clock = 0;
 
         public CPU(Rom rom)

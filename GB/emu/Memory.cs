@@ -35,7 +35,7 @@ namespace GB.emu
 
     public class Memory
     {
-        //BANK0 starts at 0x00 so it's left out here
+        public const ushort BANK0 = 0x0000;
         public const ushort BANK1 = 0x4000;
         public const ushort VRAM = 0x8000;
         public const ushort ExRAM = 0xA000;
@@ -58,15 +58,10 @@ namespace GB.emu
         }
 
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
-
-        //only use for reading VRAM, OAM or Debugging
-        public byte[] Mem { get => mem; }
+        public byte[] Mem { get => mem; } //only use for reading VRAM, OAM or Debugging
 
         private byte[] mem = new byte[0x10000];
 
-        /// <summary>
-        /// Easy access to memory read and write
-        /// </summary>
         public byte this[ushort index]
         {
             get
