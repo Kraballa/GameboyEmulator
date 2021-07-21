@@ -11,6 +11,13 @@ namespace GB.emu
         NOTHING
     }
 
+    public enum CPUMode
+    {
+        NORMAL,
+        HALT,
+        STOP
+    }
+
     public class CPU
     {
         public OCHandleMode OCHandleMode = OCHandleMode.ERROR;
@@ -22,7 +29,9 @@ namespace GB.emu
         public Display LCD;
         public Input Input;
 
-        private int Clock = 0;
+        protected CPUMode CPUMode = CPUMode.NORMAL;
+        protected int Clock = 0;
+
 
         public CPU(Rom rom)
         {
@@ -41,12 +50,12 @@ namespace GB.emu
         /// 
         /// Occurs every 70224 clocks, VBlank last 4560.
         /// </summary>
-        public void Step()
+        public virtual void Step()
         {
-            while (Clock < 70224)
+            while (Clock < 70224 && CPUMode == CPUMode.NORMAL)
             {
                 //not accurate
-                Clock += Execute(Fetch());
+                Clock += Execute(Fetch()) * 4;
             }
             Clock -= 70224;
         }
@@ -59,7 +68,7 @@ namespace GB.emu
         protected virtual int Execute(byte opcode)
         {
             uint HighBit = (uint)(opcode >> 4);
-            byte Data = 0;
+            byte Data;
             int Cycles = 0;
 
             switch (opcode)
@@ -70,8 +79,12 @@ namespace GB.emu
                     Cycles = 1;
                     break;
                 case 0x10: //STOP
-                    //TODO
+                    CPUMode = CPUMode.STOP;
                     Fetch();
+                    Cycles = 1;
+                    break;
+                case 0x76: //HALT
+                    CPUMode = CPUMode.HALT;
                     Cycles = 1;
                     break;
                 case 0xF3: //Disable Interrupts via Interrupt Master Enable Flag
@@ -88,7 +101,7 @@ namespace GB.emu
                     Cycles = 4;
                     break;
                 case 0xCB:
-                    Execute16BitOpcodes(Fetch());
+                    Cycles = Execute16Bit(Fetch());
                     break;
                 #endregion
 
@@ -301,38 +314,22 @@ namespace GB.emu
                 #endregion
 
                 default: //unknown opcode
-                    switch (OCHandleMode)
-                    {
-                        case OCHandleMode.ERROR:
-                            throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
-                        case OCHandleMode.PRINT:
-                            Console.WriteLine("unknown opcode: {0:X}", opcode);
-                            break;
-                        default:
-                            break;
-                    }
+                    HandleUnknownOpcode(opcode);
                     break;
             }
             return Cycles;
         }
 
-        private void Execute16BitOpcodes(byte opcode) //always prefixed with 'CB'
+        protected virtual int Execute16Bit(byte opcode) //always prefixed with 'CB'
         {
+            int Cycles = 0;
             switch (opcode)
             {
                 default: //unknown opcode
-                    switch (OCHandleMode)
-                    {
-                        case OCHandleMode.ERROR:
-                            throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
-                        case OCHandleMode.PRINT:
-                            Console.WriteLine("unknown opcode: {0:X}", opcode);
-                            break;
-                        default:
-                            break;
-                    }
+                    HandleUnknownOpcode(opcode);
                     break;
             }
+            return Cycles;
         }
 
         private void FlushFlags(Flags flags = 0)
@@ -350,20 +347,34 @@ namespace GB.emu
             Flags = Flags & (~flags);
         }
 
-        private bool IsSet(Flags flag)
+        public bool IsSet(Flags flag)
         {
             return (Flags & flag) == flag;
         }
 
-        public void PrintDebugInfo()
+        private void HandleUnknownOpcode(byte opcode)
         {
-            Console.WriteLine("- Gameboy CPU debug info -");
-            Console.Write("flags: ");
-            Console.Write("{0}", IsSet(Flags.ZERO) ? "Z" : "-");
-            Console.Write("{0}", IsSet(Flags.SUB) ? "N" : "-");
-            Console.Write("{0}", IsSet(Flags.HCARRY) ? "H" : "-");
-            Console.Write("{0}", IsSet(Flags.CARRY) ? "C" : "-");
-            Console.WriteLine("----");
+            switch (OCHandleMode)
+            {
+                case OCHandleMode.ERROR:
+                    throw new Exception(string.Format("unknown opcode: {0:X}", opcode));
+                case OCHandleMode.PRINT:
+                    Console.WriteLine("unknown opcode: {0:X}", opcode);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public string FlagsToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("flags: ");
+            sb.Append(string.Format("{0}", IsSet(Flags.ZERO) ? "Z" : "-"));
+            sb.Append(string.Format("{0}", IsSet(Flags.SUB) ? "N" : "-"));
+            sb.Append(string.Format("{0}", IsSet(Flags.HCARRY) ? "H" : "-"));
+            sb.Append(string.Format("{0}", IsSet(Flags.CARRY) ? "C" : "-"));
+            return sb.ToString();
         }
     }
 }
