@@ -5,11 +5,19 @@ using System.Text;
 
 namespace GB.emu
 {
+    public struct Header
+    {
+        public string Title;
+        public byte Type;
+        public byte ROMSize;
+    }
+
     public class Rom
     {
         public static Rom Empty => new Rom();
+        public Header Header;
 
-        public byte[] Data;
+        private byte[] mem;
 
         public Rom(string path)
         {
@@ -24,20 +32,63 @@ namespace GB.emu
                 throw new Exception("error, file too big");
             }
             Console.WriteLine("loading {0}", info.Name);
-            Data = File.ReadAllBytes(path);
+            mem = File.ReadAllBytes(path);
+
+            ParseCartridgeHeader();
         }
 
         private Rom()
         {
-            Data = new byte[0x14F];
+            mem = new byte[0x4000];
 
-            Data[0x100] = 0x76; //halt
-            Data[0x147] = 0x0; //cartridge type
-            Data[0x148] = 0x0; //amount of rom banks. here 0
-            Data[0x149] = 0x0; //size of external ram. here 0
-            Data[0x14A] = 0x1; //destination code
+            mem[0x100] = 0x76; //halt
+            string title = "EMPTY";
+            for (int i = 0; i < 16; i++)
+            {
+                if (i < title.Length)
+                    mem[0x134 + i] = (byte)title[i];
+                else
+                    mem[0x134 + i] = 0x0;
+            }
+            mem[0x147] = 0x0; //cartridge type
+            mem[0x148] = 0x0; //amount of rom banks. here 0
+            mem[0x149] = 0x0; //size of external ram. here 0
+            mem[0x14A] = 0x1; //destination code
 
-            //TODO: extend rom header with title, manufacturing info etc.
+            Console.WriteLine("loading empty rom");
+        }
+
+        public byte this[ushort index]
+        {
+            get
+            {
+                //TODO: Rom Banks, only allow access to BANK0
+                if (index >= Memory.BANK1)
+                    return 0x00;
+                return mem[index];
+            }
+            set //only used for debugging
+            {
+                if (index >= mem.Length)
+                    return;
+                mem[index] = value;
+            }
+        }
+
+        private void ParseCartridgeHeader()
+        {
+            char[] title = new char[16];
+            for (int i = 0; i < title.Length; i++)
+            {
+                title[i] = (char)mem[i + 0x134];
+            }
+
+            Header = new Header()
+            {
+                Title = new string(title),
+                Type = mem[0x147],
+                ROMSize = mem[0x148]
+            };
         }
     }
 }

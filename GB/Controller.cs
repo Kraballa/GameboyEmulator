@@ -15,25 +15,26 @@ namespace GB
         const int NumFrames = 30;
 
         public static Controller Instance;
-
         public CPU CPU;
 
         private GraphicsDeviceManager Graphics;
         private string Title;
+        private int Count = 0;
+        private Stopwatch Stopwatch = new Stopwatch();
 
         public Controller() : base()
         {
             Instance = this;
             IsMouseVisible = true;
             Graphics = new GraphicsDeviceManager(this);
-            Title = "Gameboy";
-            Window.Title = Title;
         }
 
         public void LoadRom(Rom rom)
         {
             CPU = new CPU(rom);
             CPU.OCHandleMode = OCHandleMode.NOTHING;
+            Title = CPU.Rom.Header.Title;
+            Window.Title = Title;
         }
 
         public void LoadRom(string path)
@@ -56,9 +57,6 @@ namespace GB
             MInput.Initialize();
         }
 
-        int count = 0;
-        Stopwatch Stopwatch = new Stopwatch();
-
         protected override void Update(GameTime gameTime)
         {
             MInput.Update();
@@ -66,15 +64,15 @@ namespace GB
             Stopwatch.Start();
             CPU.Step();
             Stopwatch.Stop();
-            count++;
-            if (count == NumFrames)
+            Count++;
+            if (Count == NumFrames)
             {
                 float executionTime = Stopwatch.ElapsedMilliseconds / (float)NumFrames / 16.6667f;
                 float speed = 100 / Math.Max(1, executionTime);
 
                 Window.Title = Title + string.Format(" - speed: {0,4}%, exetime: {1,4}%", speed, executionTime * 100);
                 Stopwatch.Reset();
-                count = 0;
+                Count = 0;
             }
 
             base.Update(gameTime);

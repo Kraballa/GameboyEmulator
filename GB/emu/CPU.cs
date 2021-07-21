@@ -15,23 +15,25 @@ namespace GB.emu
     {
         public OCHandleMode OCHandleMode = OCHandleMode.ERROR;
 
-        Flags Flags = 0;
-        Registers Regs;
-        Memory Memory;
-        Rom Rom;
-        Display LCD;
-        Input Input;
+        public Flags Flags = 0;
+        public Registers Regs;
+        public Memory Memory;
+        public Rom Rom;
+        public Display LCD;
+        public Input Input;
 
         private int Clock = 0;
 
         public CPU(Rom rom)
         {
+            Rom = rom;
             Regs = new Registers();
-            Memory = new Memory();
+            Memory = new Memory(rom);
             LCD = new Display(Memory);
             Input = new Input(Memory);
-            Rom = rom;
-            //TODO: load first rom bank into memory
+
+            //skip starting sequence and jump straight to cartridge start
+            Regs.PC = 0x100;
         }
 
         /// <summary>

@@ -50,13 +50,7 @@ namespace GB.emu
         public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
 
         public Dictionary<ushort, Action<byte>> MemoryAccessCallback = new Dictionary<ushort, Action<byte>>();
-
-        public byte IE
-        {
-            get => mem[0xFFFF];
-            set => mem[0xFFFF] = value;
-        }
-
+        public Rom Rom;
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
         public byte[] Mem { get => mem; } //only use for reading VRAM, OAM or Debugging
 
@@ -66,6 +60,8 @@ namespace GB.emu
         {
             get
             {
+                if (index < VRAM)
+                    return Rom[index];
                 return mem[index];
             }
             set
@@ -74,6 +70,11 @@ namespace GB.emu
                 if (MemoryAccessCallback.ContainsKey(index))
                     MemoryAccessCallback[index].Invoke(value);
             }
+        }
+
+        public Memory(Rom rom)
+        {
+            Rom = rom;
         }
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace GB.emu
         }
 
         /// <summary>
-        /// Get the memory area that is being accessed.
+        /// Get the memory area that is being accessed. TODO: replace with Range Tree or similar efficient data structure
         /// </summary>
         public MemoryArea GetMemoryArea(ushort index)
         {
