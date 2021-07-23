@@ -17,6 +17,7 @@ Graphics are done via the FNA library.
 - Game Boy CPU Instruction Table again followed by some basic informations on registers and flags: (https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
 - mirror to blarggs test roms: (https://gbdev.gg8.se/files/roms/blargg-gb-tests/)
 - excellent documentation of the hardware and how it interacts: (https://problemkaputt.de/pandocs.htm)
+- implementation of the graphics: (http://www.codeslinger.co.uk/pages/projects/gameboy/graphics.html)
 - there are many more resources. will append as I find and use them
 
 ## Code Conventions

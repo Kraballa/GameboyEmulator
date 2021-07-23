@@ -1,27 +1,20 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace GB.emu
 {
-    public enum Palette
-    {
-        White = 0b00000011,
-        LightGray = 0b00001100,
-        DarkGray = 0b00110000,
-        Black = 0b11000000
-    }
-
     public enum LCDCReg
     {
         DisplayEnable = 0b10000000,
         WinTileMapDispSel = 0b01000000,
-        WindowDisplayEnable = 0b00100000,
+        WindowDisplayEnable = 0b00100000, //window
         BGWinTileDataSel = 0b00010000,
         BGTileMapDisplaySel = 0b00001000,
-        OBJSize = 0b00000100,
-        OBJDisplayEnable = 0b00000010,
-        BGDisplay = 0b00000001
+        OBJSize = 0b00000100, //0 = 8x8, 1 = 8x16
+        OBJDisplayEnable = 0b00000010, //sprites
+        BGDisplayEnable = 0b00000001 //backgrounds / tiles
     }
 
     public enum LCDSReg
@@ -49,6 +42,8 @@ namespace GB.emu
 
         //need access to memory to write to and read from
         private Memory Memory;
+        private int ScanlineCounter = 0;
+
 
         public Display(Memory memory)
         {
@@ -77,6 +72,325 @@ namespace GB.emu
             for (ushort offset = 0x00; offset < 0x9F; offset++)
             {
                 Memory[(ushort)(Memory.OAM | offset)] = Memory[(ushort)(start | offset)];
+            }
+        }
+
+        public void UpdateGraphics(int cycles)
+        {
+            SetLCDStatus();
+
+            if ((Memory[LCDC] & (byte)LCDCReg.DisplayEnable) != 0)
+            {
+                ScanlineCounter -= cycles;
+            }
+            else
+            {
+                return;
+            }
+
+            if (ScanlineCounter <= 0)
+            {
+                Memory[LY]++;
+                byte currentLine = Memory[LY];
+                ScanlineCounter = 456;
+
+                if (currentLine == 144)
+                    CPU.Instance.RequestInterrupt(InterruptType.VBlank);
+
+                if (currentLine > 153)
+                {
+                    Memory[LY] = 0;
+
+                }
+                else if (currentLine < 144)
+                {
+                    RenderScanline();
+                }
+            }
+        }
+
+        private void SetLCDStatus()
+        {
+            byte status = Memory[LCDS];
+            if ((Memory[LCDC] & (byte)LCDCReg.DisplayEnable) != 0)
+            {
+                ScanlineCounter = 456;
+                Memory[LY] = 0;
+                status &= 252;
+                status |= 0b1;
+                Memory[LCDS] = status;
+                return;
+            }
+
+            byte currentLine = Memory[LY];
+            byte currentMode = (byte)(status & (byte)LCDSReg.Mode);
+            byte newMode;
+            bool needInterrupt = false;
+
+            if (currentLine >= 144)
+            {
+                newMode = 1;
+                status |= 1;
+                status &= 0b11111101;
+                needInterrupt = (status & (1 << 4)) != 0;
+            }
+            else
+            {
+                int mode2Bounds = 456 - 80;
+                int mode3Bounds = 456 - 80 - 172;
+
+                if (ScanlineCounter >= mode2Bounds)
+                {
+                    newMode = 2;
+                    status |= 0b10;
+                    status &= 0b11111110;
+                    needInterrupt = (status & (1 << 5)) != 0;
+                }
+                else if (ScanlineCounter >= mode3Bounds)
+                {
+                    newMode = 2;
+                    status |= 0b11;
+                }
+                else
+                {
+                    newMode = 0;
+                    status &= 0b11111100;
+                    needInterrupt = (status & (1 << 3)) != 0;
+                }
+            }
+
+            if (needInterrupt && (newMode != currentMode))
+            {
+                CPU.Instance.RequestInterrupt(InterruptType.LCD);
+            }
+
+            if (Memory[LCDC] == Memory[LYC])
+            {
+                status |= (1 << 2);
+                if ((status & (1 << 6)) != 0)
+                    CPU.Instance.RequestInterrupt(InterruptType.LCD);
+            }
+            else
+            {
+                status &= 0b11111011;
+            }
+            Memory[LCDS] = status;
+        }
+
+        private void RenderScanline()
+        {
+            Controller.Instance.GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
+            Render.Begin();
+            if ((Memory[LCDC] & (byte)LCDCReg.BGDisplayEnable) != 0)
+            {
+                RenderTiles();
+            }
+
+            if ((Memory[LCDC] & (byte)LCDCReg.OBJDisplayEnable) != 0)
+            {
+                RenderSprites();
+            }
+            Render.End();
+        }
+
+        private void RenderTiles()
+        {
+            ushort tileData;
+            ushort backgroundMemory;
+            bool unsig = true;
+            bool usingWindow = false;
+
+            byte winX = (byte)(Memory[WX] - 7);
+            byte winY = Memory[WY];
+            byte scrollX = Memory[SCX];
+            byte scrollY = Memory[SCY];
+
+            if ((Memory[LCDC] & (byte)LCDCReg.WindowDisplayEnable) != 0)
+            {
+                //draw window
+                if (winY <= Memory[LY])
+                    usingWindow = true;
+            }
+
+            if ((Memory[LCDC] & (byte)LCDCReg.WinTileMapDispSel) != 0)
+            {
+                tileData = Memory.VRAM;
+            }
+            else
+            {
+                tileData = 0x9C00;
+                unsig = true;
+            }
+
+            if (!usingWindow)
+            {
+                if ((Memory[LCDC] & (byte)LCDCReg.BGTileMapDisplaySel) != 0)
+                {
+                    backgroundMemory = 0x9C00;
+                }
+                else
+                {
+                    backgroundMemory = 0x9800;
+                }
+            }
+            else
+            {
+                if ((Memory[LCDC] & (byte)LCDCReg.WinTileMapDispSel) != 0)
+                {
+                    backgroundMemory = 0x9C00;
+                }
+                else
+                {
+                    backgroundMemory = 0x9800;
+                }
+            }
+
+            byte yPos = 0;
+            if (!usingWindow)
+                yPos = (byte)(scrollY + Memory[LY]);
+            else
+                yPos = (byte)(Memory[LY] - winY);
+            ushort tileRow = (ushort)((yPos / 8) * 32);
+
+            for (int pixelX = 0; pixelX < 160; pixelX++)
+            {
+                int pixelY = Memory[LY];
+                //make sure we're not trying to render a pixel outside the window
+                if (pixelY < 0 || pixelY > 143 || pixelX < 0 || pixelX > 159)
+                    continue;
+
+                byte xPos;
+                if (usingWindow && pixelX >= winX)
+                {
+                    xPos = (byte)(pixelX - winX);
+                }
+                else
+                {
+                    xPos = (byte)(pixelX + scrollX);
+                }
+                ushort tileColumn = (ushort)(xPos / 8);
+                ushort tileAddress = (ushort)(backgroundMemory + tileRow + tileColumn);
+                ushort tileId = Memory[tileAddress]; //TODO figure out the whole signed unsigned byte thing
+
+                ushort tileLocation = tileData;
+                if (unsig)
+                    tileLocation += (ushort)(tileId * 16);
+                else
+                    tileLocation += (ushort)((tileId + 128) * 16);
+
+                byte line = (byte)((yPos % 8) * 2);
+                byte data1 = Memory[(ushort)(tileLocation + line)];
+                byte data2 = Memory[(ushort)(tileLocation + line + 1)];
+                int colourBit = xPos % 8;
+                colourBit -= 7;
+                colourBit *= -1;
+
+                int colourNum = (data2 & (1 << colourBit)) >> colourBit;
+                colourNum <<= 1;
+                colourNum |= (data1 & (1 << colourBit)) >> colourBit;
+                Color color = DecodeColor(colourNum, 0xFF47);
+
+                Render.Point(new Vector2(pixelX, pixelY), color);
+            }
+        }
+
+        private void RenderSprites()
+        {
+            bool wideSprites = (Memory[LCDC] & (byte)LCDCReg.OBJSize) != 0;
+
+            for (int sprite = 0; sprite < 40; sprite++)
+            {
+                byte index = (byte)(sprite * 4);
+                byte sprX = (byte)(Memory[(ushort)(Memory.OAM + index + 1)] - 8);
+                byte sprY = (byte)(Memory[(ushort)(Memory.OAM + index)] - 16);
+                byte tileLocation = Memory[(ushort)(Memory.OAM + index + 2)];
+                byte attributes = Memory[(ushort)(Memory.OAM + index + 3)];
+
+                bool xFlip = (attributes & (1 << 5)) != 0;
+                bool yFlip = (attributes & (1 << 6)) != 0;
+
+                int pixelY = Memory[LY];
+
+                int ySize = wideSprites ? 16 : 8;
+                if ((pixelY >= sprY) && (pixelY < (sprY + ySize)))
+                {
+                    int line = pixelY - sprY;
+                    if (yFlip)
+                    {
+                        line -= ySize;
+                        line *= -1;
+                    }
+
+                    line *= 2;
+                    ushort memAddress = (ushort)((Memory.VRAM + (tileLocation * 16)) + line);
+                    byte data1 = Memory[memAddress];
+                    byte data2 = Memory[(ushort)(memAddress + 1)];
+
+                    for (int tilePixel = 7; tilePixel >= 0; tilePixel--)
+                    {
+                        int colorBit = tilePixel;
+                        if (xFlip)
+                        {
+                            colorBit -= 7;
+                            colorBit *= -1;
+                        }
+
+                        int colorNum = (data2 & (1 << colorBit)) >> colorBit;
+                        colorNum <<= 1;
+                        colorNum |= (data1 & (1 << colorBit)) >> colorBit;
+
+                        ushort colorAddress;
+                        if ((attributes & (1 << 4)) != 0)
+                            colorAddress = 0xFF49;
+                        else
+                            colorAddress = 0xFF48;
+
+                        Color color = DecodeColor(colorNum, colorAddress);
+                        if (color == Color.White) //white is transparent
+                            continue;
+
+                        int xPix = -tilePixel;
+                        xPix += 7;
+
+                        int pixelX = sprX + xPix;
+                        //make sure we're not trying to render a pixel outside the window
+                        if (pixelY < 0 || pixelY > 143 || pixelX < 0 || pixelX > 159)
+                            continue;
+                        Render.Point(new Vector2(pixelX, pixelY), color);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// the gameboy has 4 colors. white is also used for transparency. sprites have a 1 byte palette of which 2 bits each denote one colour.
+        /// we have to decode the palette using the index and then map it onto an actual color.
+        /// </summary>
+        private Color DecodeColor(int num, ushort address)
+        {
+            byte palette = Memory[address];
+            int hi = 0;
+            int lo = 0;
+
+            switch (num)
+            {
+                case 0: hi = 1; lo = 0; break;
+                case 1: hi = 3; lo = 2; break;
+                case 2: hi = 5; lo = 4; break;
+                case 3: hi = 7; lo = 6; break;
+            }
+
+            int color;
+            color = (palette & (1 << hi)) >> hi;
+            color <<= 1;
+            color |= (palette & (1 << lo)) >> lo;
+
+            switch (color)
+            {
+                case 0: return Color.White;
+                case 1: return new Color(170, 170, 170);
+                case 2: return new Color(85, 85, 85);
+                default: return Color.Black;
             }
         }
     }

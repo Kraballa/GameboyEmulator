@@ -60,7 +60,7 @@ namespace GB.emu
             {
                 int cycleDelta = Execute(Fetch()) * 4;
                 Cycles += cycleDelta;
-                //LCD.UpdateGraphics(cycleDelta);
+                LCD.UpdateGraphics(cycleDelta);
                 HandleInterrupts();
             }
             Cycles -= 70224;
