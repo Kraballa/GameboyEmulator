@@ -17,7 +17,7 @@ namespace GB
             else
             {
                 cont = new Controller();
-                cont.LoadRom(Rom.Empty);
+                cont.LoadRom(new Rom("tetris.gb"));
             }
             cont.Run();
             cont.Dispose();

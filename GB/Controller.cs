@@ -79,7 +79,9 @@ namespace GB
 
             if (KInput.CheckPressed(Keys.F1))
             {
+                Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(CPU.FlagsToString() + " - PC: 0x{0:X} - rom: {1}", CPU.Regs.PC, CPU.Rom.Header.Title);
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
 
             base.Update(gameTime);

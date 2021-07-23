@@ -31,7 +31,9 @@ namespace GB.emu
             {
                 throw new Exception("error, file too big");
             }
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("loading {0}", info.Name);
+            Console.ForegroundColor = ConsoleColor.Gray;
             mem = File.ReadAllBytes(path);
 
             ParseCartridgeHeader();
