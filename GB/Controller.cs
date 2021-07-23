@@ -1,5 +1,6 @@
 ﻿using GB.emu;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
@@ -55,6 +56,7 @@ namespace GB
             Render.Initialize(GraphicsDevice);
             KInput.Initialize();
             MInput.Initialize();
+            RenderTargets.Initialize(GraphicsDevice);
         }
 
         protected override void Update(GameTime gameTime)
@@ -86,8 +88,9 @@ namespace GB
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.SetRenderTarget(null);
             Render.Begin();
-            //render...
+            Render.SpriteBatch.Draw(RenderTargets.ScreenBuffer, Vector2.Zero, null, Color.White, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, 0);
             Render.End();
             base.Draw(gameTime);
         }
