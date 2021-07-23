@@ -20,6 +20,8 @@ namespace GB.emu
 
     public class CPU
     {
+        public static CPU Instance;
+
         public OCErrorMode OCErrorMode = OCErrorMode.ERROR;
 
         public Flags Flags = 0;
@@ -34,6 +36,8 @@ namespace GB.emu
 
         public CPU(Rom rom)
         {
+            Instance = this;
+
             Rom = rom;
             Regs = new Registers();
             Memory = new Memory(rom);
@@ -50,17 +54,14 @@ namespace GB.emu
             Regs.SP = 0xFFFE;
         }
 
-        /// <summary>
-        /// one frame, as in the period between 2 VBlanks
-        /// 
-        /// Occurs every 70224 clocks, VBlank last 4560.
-        /// </summary>
         public virtual void Step()
         {
-            while (Cycles < 70224 && CPUMode == CPUMode.NORMAL)
+            while (Cycles < 70224)
             {
-                //not accurate
-                Cycles += Execute(Fetch()) * 4;
+                int cycleDelta = Execute(Fetch()) * 4;
+                Cycles += cycleDelta;
+                //LCD.UpdateGraphics(cycleDelta);
+                HandleInterrupts();
             }
             Cycles -= 70224;
         }
@@ -102,7 +103,7 @@ namespace GB.emu
                     break;
                 case 0xD9: //RETI
                     Memory.IMEF = true;
-                    //TODO: same code as RET
+                    Regs.PC = Memory.Pop();
                     Cycles = 4;
                     break;
                 case 0xCB:
@@ -835,6 +836,53 @@ namespace GB.emu
                     Console.WriteLine("unknown opcode: 0x{0:X}", opcode);
                     break;
                 default:
+                    break;
+            }
+        }
+
+        public void RequestInterrupt(InterruptType type)
+        {
+            Memory[Memory.IFREG] |= (byte)type;
+        }
+
+        private void HandleInterrupts()
+        {
+            if (Memory.IMEF)
+            {
+                byte req = Memory[Memory.IFREG];
+                byte enabled = Memory[Memory.IEREG];
+                if (req > 0)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        if ((req & (1 << i)) != 0 && (enabled & (1 << i)) != 0)
+                        {
+                            DoInterrupt((InterruptType)i);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DoInterrupt(InterruptType type)
+        {
+            Memory.IMEF = false;
+            Memory[Memory.IFREG] &= (byte)~(1 << (int)type);
+            Memory.Push(Regs.PC);
+
+            switch (type)
+            {
+                case InterruptType.VBlank:
+                    Regs.PC = 0x40;
+                    break;
+                case InterruptType.LCD:
+                    Regs.PC = 0x48;
+                    break;
+                case InterruptType.Timer:
+                    Regs.PC = 0x50;
+                    break;
+                case InterruptType.Joypad:
+                    Regs.PC = 0x60;
                     break;
             }
         }

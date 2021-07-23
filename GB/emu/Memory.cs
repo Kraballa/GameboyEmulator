@@ -77,6 +77,23 @@ namespace GB.emu
             Rom = rom;
         }
 
+        public void Push(ushort data)
+        {
+            this[CPU.Instance.Regs.SP] = (byte)(data & 0xFF);
+            CPU.Instance.Regs.SP--;
+            this[CPU.Instance.Regs.SP] = (byte)((data & 0xFF00) >> 8);
+            CPU.Instance.Regs.SP--;
+        }
+
+        public ushort Pop()
+        {
+            CPU.Instance.Regs.SP--;
+            ushort data = (ushort)(this[CPU.Instance.Regs.SP] << 8);
+            CPU.Instance.Regs.SP--;
+            data |= this[CPU.Instance.Regs.SP];
+            return data;
+        }
+
         /// <summary>
         /// Check whether the given memory area is accessible.
         /// </summary>
