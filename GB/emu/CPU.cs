@@ -72,7 +72,7 @@ namespace GB.emu
 
         protected ushort FetchWord()
         {
-            return (ushort)((Fetch() << 8) | Fetch());
+            return (ushort)(Fetch() | (Fetch() << 8));
         }
 
         protected virtual int Execute(byte opcode)
