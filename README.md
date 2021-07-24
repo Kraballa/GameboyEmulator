@@ -45,3 +45,8 @@ This is an overview on what's been implemented and what's still left:
 - [ ] get through blarggs test roms
 - [ ] memory bank switching
 - [ ] sound (out of scope for the near future)
+
+## Other things to consider
+- replace fixed setting of cycles with dynamically setting it (accessing memory takes 1 cycle per byte, pushing/popping from SP takes 1 cycle per byte, fetching takes 1 byte per fetch)
+- figure out ways to do file browsing/selecting in FNA without losing cross platform support
+- figure out a way to have a menu with settings without losing cross platform support

@@ -70,6 +70,11 @@ namespace GB.emu
             return Memory[Regs.PC++];
         }
 
+        protected ushort FetchWord()
+        {
+            return (ushort)((Fetch() << 8) | Fetch());
+        }
+
         protected virtual int Execute(byte opcode)
         {
             uint HighBit = (uint)(opcode >> 4);
@@ -101,7 +106,7 @@ namespace GB.emu
                     Cycles = 1;
                     break;
                 case 0xD9: //RETI
-                    Memory.IMEF = true;
+                    Memory.IMEF = Memory.PrevIMEF;
                     Regs.PC = Memory.Pop();
                     Cycles = 4;
                     break;
@@ -148,7 +153,7 @@ namespace GB.emu
                     break;
 
                 case 0x08:
-                    ushort address = (ushort)((Fetch() << 8) | Fetch());
+                    ushort address = FetchWord();
                     Memory[address] = Regs.GetLow(4);
                     Memory[address] = Regs.GetHigh(4);
                     Cycles = 5;
@@ -180,7 +185,7 @@ namespace GB.emu
                 case 0x11:
                 case 0x21:
                 case 0x31:
-                    Regs[HighBit + 1] = (ushort)(Fetch() | Fetch() << 8);
+                    Regs[HighBit + 1] = FetchWord();
                     Cycles = 3;
                     break;
                 #endregion
@@ -815,7 +820,7 @@ namespace GB.emu
                 case 0xC2:
                     if (!Regs.IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Regs.PC = FetchWord();
                         Cycles = 4; ;
                     }
                     else
@@ -826,7 +831,7 @@ namespace GB.emu
                 case 0xD2:
                     if (!Regs.IsSet(Flags.CARRY))
                     {
-                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Regs.PC = FetchWord();
                         Cycles = 4; ;
                     }
                     else
@@ -845,7 +850,7 @@ namespace GB.emu
                     break;
 
                 case 0xC3:
-                    Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                    Regs.PC = FetchWord();
                     Cycles = 4;
                     break;
 
@@ -853,7 +858,7 @@ namespace GB.emu
                     if (!Regs.IsSet(Flags.ZERO))
                     {
                         Memory.Push(Regs.PC);
-                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Regs.PC = FetchWord();
                         Cycles = 6;
                     }
                     else
@@ -865,7 +870,7 @@ namespace GB.emu
                     if (!Regs.IsSet(Flags.CARRY))
                     {
                         Memory.Push(Regs.PC);
-                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Regs.PC = FetchWord();
                         Cycles = 6;
                     }
                     else
@@ -884,6 +889,174 @@ namespace GB.emu
                     Memory.Push(Regs.AF);
                     Cycles = 4;
                     break;
+
+                #region ADD|SUB|AND|OR A immediate
+                case 0xC6:
+                    {
+                        Regs.Unset(Flags.SUB);
+                        int val = Fetch();
+                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY | Flags.HCARRY);
+                        Regs.A += (byte)val;
+                        Regs.Place(Regs.A == 0, Flags.ZERO);
+                        Cycles = 2;
+                    }
+                    break;
+                case 0xD6:
+                    {
+                        Regs.Set(Flags.SUB);
+                        int val = Fetch();
+                        Regs.Place(Regs.A - val < 0, Flags.CARRY | Flags.HCARRY);
+                        Regs.A -= (byte)val;
+                        Regs.Place(Regs.A == 0, Flags.ZERO);
+                        Cycles = 2;
+                    }
+                    break;
+                case 0xE6:
+                    Regs.A &= Fetch();
+                    Regs.Set(Flags.HCARRY);
+
+                    Regs.Unset(Flags.SUB | Flags.CARRY);
+                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Cycles = 2;
+                    break;
+
+                #endregion
+
+                #region RST [0-7]
+                case 0xC7:
+                case 0xD7:
+                case 0xE7:
+                case 0xF7:
+                    Memory.Push(Regs.PC);
+                    Regs.PC = (ushort)((HighBit - 0xC) * 2);
+                    Cycles = 4;
+                    break;
+                case 0xCF:
+                case 0xDF:
+                case 0xEF:
+                case 0xFF:
+                    Memory.Push(Regs.PC);
+                    Regs.PC = (ushort)((HighBit - 0xC) * 2 + 1);
+                    Cycles = 4;
+                    break;
+                #endregion
+
+                case 0xC8:
+                    if (Regs.IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = Memory.Pop();
+                        Cycles = 5;
+                    }
+                    else
+                    {
+                        Cycles = 2;
+                    }
+                    break;
+                case 0xD8:
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = Memory.Pop();
+                        Cycles = 5;
+                    }
+                    else
+                    {
+                        Cycles = 2;
+                    }
+                    break;
+
+                case 0xE8:
+                    {
+                        int value = Regs.SP + Fetch();
+                        Regs.Place(value > ushort.MaxValue, Flags.CARRY | Flags.HCARRY);
+                        Regs.SP = (ushort)value;
+                        Regs.Unset(Flags.ZERO | Flags.SUB);
+                        Cycles = 4;
+                    }
+                    break;
+
+                case 0xF8:
+                    {
+                        int value = (ushort)(Regs.SP + (Fetch() - 128));
+                        Regs.Place(value > ushort.MaxValue, Flags.CARRY | Flags.HCARRY);
+                        Regs.HL = (ushort)value;
+                        Cycles = 3;
+                    }
+                    break;
+
+                case 0xC9:
+                    Regs.PC = Memory.Pop();
+                    Cycles = 4;
+                    break;
+
+                case 0xE9:
+                    Regs.PC = Regs.HL;
+                    Cycles = 1;
+                    break;
+                case 0xF9:
+                    Regs.SP = Regs.HL;
+                    Cycles = 2;
+                    break;
+                #region JP C,Z
+                case 0xCA:
+                    if (Regs.IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = FetchWord();
+                        Cycles = 4;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+                case 0xDA:
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = FetchWord();
+                        Cycles = 4;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+                #endregion
+
+                #region LD A (16)
+                case 0xEA:
+                    Memory[FetchWord()] = Regs.A;
+                    Cycles = 4;
+                    break;
+                case 0xFA:
+                    Regs.A = Memory[FetchWord()];
+                    Cycles = 4;
+                    break;
+                #endregion
+
+                #region CALL C,Z
+                case 0xCC:
+                    if (Regs.IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = FetchWord();
+                        Cycles = 6;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+                case 0xDC:
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = FetchWord();
+                        Cycles = 6;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+
+                #endregion
 
                 default: //unknown opcode
                     HandleUnknownOpcode(opcode);
@@ -944,6 +1117,7 @@ namespace GB.emu
 
         private void DoInterrupt(InterruptType type)
         {
+            Memory.PrevIMEF = Memory.IMEF;
             Memory.IMEF = false;
             Memory[Memory.IFREG] &= (byte)~(1 << (int)type);
             Memory.Push(Regs.PC);
