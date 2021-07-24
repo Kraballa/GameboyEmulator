@@ -161,7 +161,7 @@ namespace GB.emu
                     Cycles = 2;
                     if (!IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Regs.PC = (ushort)(Regs.PC + Fetch());
                         Cycles++;
                     }
                     break;
@@ -169,7 +169,7 @@ namespace GB.emu
                     Cycles = 2;
                     if (!IsSet(Flags.CARRY))
                     {
-                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Regs.PC = (ushort)(Regs.PC + Fetch());
                         Cycles++;
                     }
                     break;
@@ -282,14 +282,14 @@ namespace GB.emu
 
                 #region JR [0|Z|C], s8
                 case 0x18:
-                    Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                    Regs.PC = (ushort)(Regs.PC + Fetch());
                     Cycles = 3;
                     break;
                 case 0x28:
                     Cycles = 2;
                     if (IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Regs.PC = (ushort)(Regs.PC + Fetch());
                         Cycles++;
                     }
                     break;
@@ -297,7 +297,7 @@ namespace GB.emu
                     Cycles = 2;
                     if (IsSet(Flags.CARRY))
                     {
-                        Regs.PC = (ushort)(Regs.PC - 1 + Fetch());
+                        Regs.PC = (ushort)(Regs.PC + Fetch());
                         Cycles++;
                     }
                     break;
