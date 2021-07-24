@@ -40,6 +40,9 @@ namespace GB.emu
         public const ushort DMA = 0xFF46; // DMA transfer start address
         public const ushort VRAMBank = 0xFF4F; // select either VRAM Bank 0 or 1
 
+        private const int MODE2BOUNDS = 456 - 80;
+        private const int MODE3BOUNDS = 456 - 80 - 172;
+
         //need access to memory to write to and read from
         private Memory Memory;
         private int ScanlineCounter = 0;
@@ -91,18 +94,16 @@ namespace GB.emu
             if (ScanlineCounter <= 0)
             {
                 Memory[LY]++;
-                byte currentLine = Memory[LY];
                 ScanlineCounter = 456;
 
-                if (currentLine == 144)
+                if (Memory[LY] == 144)
                     CPU.Instance.RequestInterrupt(InterruptType.VBlank);
 
-                if (currentLine > 153)
+                if (Memory[LY] > 153)
                 {
                     Memory[LY] = 0;
-
                 }
-                else if (currentLine < 144)
+                else if (Memory[LY] < 144)
                 {
                     RenderScanline();
                 }
@@ -112,11 +113,11 @@ namespace GB.emu
         private void SetLCDStatus()
         {
             byte status = Memory[LCDS];
-            if ((Memory[LCDC] & (byte)LCDCReg.DisplayEnable) != 0)
+            if ((Memory[LCDC] & (byte)LCDCReg.DisplayEnable) == 0)
             {
                 ScanlineCounter = 456;
                 Memory[LY] = 0;
-                status &= 252;
+                status &= 0b11111100;
                 status |= 0b1;
                 Memory[LCDS] = status;
                 return;
@@ -136,19 +137,16 @@ namespace GB.emu
             }
             else
             {
-                int mode2Bounds = 456 - 80;
-                int mode3Bounds = 456 - 80 - 172;
-
-                if (ScanlineCounter >= mode2Bounds)
+                if (ScanlineCounter >= MODE2BOUNDS)
                 {
                     newMode = 2;
                     status |= 0b10;
                     status &= 0b11111110;
                     needInterrupt = (status & (1 << 5)) != 0;
                 }
-                else if (ScanlineCounter >= mode3Bounds)
+                else if (ScanlineCounter >= MODE3BOUNDS)
                 {
-                    newMode = 2;
+                    newMode = 3;
                     status |= 0b11;
                 }
                 else
@@ -164,7 +162,7 @@ namespace GB.emu
                 CPU.Instance.RequestInterrupt(InterruptType.LCD);
             }
 
-            if (Memory[LCDC] == Memory[LYC])
+            if (Memory[LY] == Memory[LYC])
             {
                 status |= (1 << 2);
                 if ((status & (1 << 6)) != 0)
