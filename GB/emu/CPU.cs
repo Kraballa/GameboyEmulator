@@ -162,19 +162,29 @@ namespace GB.emu
 
                 #region JR NX, s8
                 case 0x20:
-                    Cycles = 2;
+
                     if (!Regs.IsSet(Flags.ZERO))
                     {
                         Regs.PC = (ushort)(Regs.PC + Fetch());
-                        Cycles++;
+                        Cycles = 3;
+                    }
+                    else
+                    {
+                        Regs.PC++;
+                        Cycles = 2;
                     }
                     break;
                 case 0x30:
-                    Cycles = 2;
+
                     if (!Regs.IsSet(Flags.CARRY))
                     {
                         Regs.PC = (ushort)(Regs.PC + Fetch());
-                        Cycles++;
+                        Cycles = 3;
+                    }
+                    else
+                    {
+                        Regs.PC++;
+                        Cycles = 2;
                     }
                     break;
 
@@ -290,19 +300,29 @@ namespace GB.emu
                     Cycles = 3;
                     break;
                 case 0x28:
-                    Cycles = 2;
+
                     if (Regs.IsSet(Flags.ZERO))
                     {
                         Regs.PC = (ushort)(Regs.PC + Fetch());
-                        Cycles++;
+                        Cycles = 3;
+                    }
+                    else
+                    {
+                        Regs.PC++;
+                        Cycles = 2;
                     }
                     break;
                 case 0x38:
-                    Cycles = 2;
+
                     if (Regs.IsSet(Flags.CARRY))
                     {
                         Regs.PC = (ushort)(Regs.PC + Fetch());
-                        Cycles++;
+                        Cycles = 3;
+                    }
+                    else
+                    {
+                        Regs.PC++;
+                        Cycles = 2;
                     }
                     break;
                 #endregion
@@ -825,6 +845,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -836,6 +857,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -863,6 +885,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -875,6 +898,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -1005,6 +1029,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -1016,6 +1041,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -1041,6 +1067,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
@@ -1052,6 +1079,7 @@ namespace GB.emu
                     }
                     else
                     {
+                        Regs.PC += 2;
                         Cycles = 3;
                     }
                     break;
