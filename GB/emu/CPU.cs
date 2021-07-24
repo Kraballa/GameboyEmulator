@@ -1020,6 +1020,7 @@ namespace GB.emu
                     Regs.SP = Regs.HL;
                     Cycles = 2;
                     break;
+
                 #region JP C,Z
                 case 0xCA:
                     if (Regs.IsSet(Flags.ZERO))
@@ -1083,7 +1084,45 @@ namespace GB.emu
                         Cycles = 3;
                     }
                     break;
+                case 0xCD:
+                    Regs.PC = FetchWord();
+                    Cycles = 6;
+                    break;
+                #endregion
 
+                #region Even more A shenanigans
+                case 0xCE:
+                    {
+                        int value = Regs.A + Fetch() + (Regs.IsSet(Flags.CARRY) ? 1 : 0);
+                        Regs.Place(value > byte.MaxValue, Flags.CARRY | Flags.HCARRY);
+                        Regs.A = (byte)value;
+                        Regs.Unset(Flags.SUB);
+                        Regs.Place(Regs.A == 0, Flags.ZERO);
+                        Cycles = 2;
+                    }
+                    break;
+                case 0xDE:
+                    {
+                        int value = Regs.A - Fetch() - (Regs.IsSet(Flags.CARRY) ? 1 : 0);
+                        Regs.Place(value < 0, Flags.CARRY | Flags.HCARRY);
+                        Regs.A = (byte)value;
+                        Regs.Set(Flags.SUB);
+                        Regs.Place(Regs.A == 0, Flags.ZERO);
+                        Cycles = 2;
+                    }
+                    break;
+                case 0xEE:
+                    Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
+                    Regs.A ^= Fetch();
+                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Cycles = 2;
+                    break;
+                case 0xFE:
+                    Regs.Set(Flags.SUB);
+                    Regs.Unset(Flags.HCARRY | Flags.CARRY);
+                    Regs.Place(Regs.A == Fetch(), Flags.ZERO);
+                    Cycles = 2;
+                    break;
                 #endregion
 
                 default: //unknown opcode
