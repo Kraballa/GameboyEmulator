@@ -81,9 +81,9 @@ namespace GB.emu
 
         public void Push(ushort data)
         {
-            this[CPU.Instance.Regs.SP] = (byte)(data & 0xFF);
-            CPU.Instance.Regs.SP--;
             this[CPU.Instance.Regs.SP] = (byte)((data & 0xFF00) >> 8);
+            CPU.Instance.Regs.SP--;
+            this[CPU.Instance.Regs.SP] = (byte)(data & 0xFF);
             CPU.Instance.Regs.SP--;
         }
 
