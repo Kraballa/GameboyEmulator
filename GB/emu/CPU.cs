@@ -748,8 +748,6 @@ namespace GB.emu
                     break;
                 #endregion
 
-
-
                 #region More A shenanigans
                 case 0x8F:
                     Place(Regs.A * 2 + (IsSet(Flags.CARRY) ? 1 : 0) > byte.MaxValue, Flags.CARRY | Flags.HCARRY);
@@ -774,6 +772,119 @@ namespace GB.emu
                     Cycles = 1;
                     break;
                 #endregion
+
+                case 0xC0:
+                    Cycles = 2;
+                    if (!IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = Memory.Pop();
+                        Cycles += 3;
+                    }
+                    break;
+
+                case 0xD0:
+                    Cycles = 2;
+                    if (!IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = Memory.Pop();
+                        Cycles += 3;
+                    }
+                    break;
+
+                case 0xE0:
+                    Memory[(ushort)(Fetch() | 0xFF00)] = Regs.A;
+                    Cycles = 3;
+                    break;
+
+                case 0xF0:
+                    Regs.A = Memory[(ushort)(Fetch() | 0xFF00)];
+                    break;
+
+                #region POP [BC|DE|HL|AF]
+                case 0xC1:
+                case 0xD1:
+                case 0xE1:
+                    Regs[HighBit - 0xB] = Memory.Pop();
+                    Cycles = 3;
+                    break;
+                case 0xF1:
+                    Regs[0] = Memory.Pop();
+                    Cycles = 3;
+                    break;
+                #endregion
+
+                case 0xC2:
+                    if (!IsSet(Flags.ZERO))
+                    {
+                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Cycles = 4; ;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+                case 0xD2:
+                    if (!IsSet(Flags.CARRY))
+                    {
+                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Cycles = 4; ;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+
+                case 0xE2:
+                    Memory[(ushort)(Regs.C | 0xFF00)] = Regs.A;
+                    Cycles = 2;
+                    break;
+                case 0xF2:
+                    Regs.A = Memory[(ushort)(Regs.C | 0xFF00)];
+                    Cycles = 2;
+                    break;
+
+                case 0xC3:
+                    Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                    Cycles = 4;
+                    break;
+
+                case 0xC4:
+                    if (!IsSet(Flags.ZERO))
+                    {
+                        Memory.Push(Regs.PC);
+                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Cycles = 6;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+                case 0xD4:
+                    if (!IsSet(Flags.CARRY))
+                    {
+                        Memory.Push(Regs.PC);
+                        Regs.PC = (ushort)(Fetch() | (Fetch() << 8));
+                        Cycles = 6;
+                    }
+                    else
+                    {
+                        Cycles = 3;
+                    }
+                    break;
+
+                case 0xC5:
+                case 0xD5:
+                case 0xE5:
+                    Memory.Push(Regs[HighBit - 0x8]);
+                    Cycles = 4;
+                    break;
+                case 0xF5:
+                    Memory.Push(Regs.AF);
+                    Cycles = 4;
+                    break;
 
                 default: //unknown opcode
                     HandleUnknownOpcode(opcode);

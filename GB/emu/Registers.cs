@@ -8,6 +8,12 @@ namespace GB.emu
     {
         private ushort[] regs = new ushort[6];
 
+        public ushort AF
+        {
+            get => regs[0];
+            set => regs[0] = value;
+        }
+
         public byte A
         {
             get => GetHigh(0);
