@@ -8,6 +8,12 @@ namespace GB.emu
     {
         private ushort[] regs = new ushort[6];
 
+        public Flags Flags
+        {
+            get => (Flags)GetLow(0);
+            set => SetLow(0, (byte)value);
+        }
+
         public ushort AF
         {
             get => regs[0];
@@ -132,6 +138,38 @@ namespace GB.emu
         {
             get => regs[index];
             set => regs[index] = value;
+        }
+
+        public void FlushFlags(Flags flags = 0)
+        {
+            Flags = flags;
+        }
+
+        public void Place(bool value, Flags flag)
+        {
+            if (value)
+            {
+                Set(flag);
+            }
+            else
+            {
+                Unset(flag);
+            }
+        }
+
+        public void Set(Flags flags)
+        {
+            Flags |= flags;
+        }
+
+        public void Unset(Flags flags)
+        {
+            Flags = Flags & (~flags);
+        }
+
+        public bool IsSet(Flags flag)
+        {
+            return (Flags & flag) == flag;
         }
 
         public override string ToString()
