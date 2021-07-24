@@ -91,6 +91,7 @@ namespace GB.emu
                 Type = mem[0x147],
                 ROMSize = mem[0x148]
             };
+            Header.Title = Header.Title.Replace("\0", null);
         }
     }
 }
