@@ -32,10 +32,10 @@ namespace GBTesting
             Assert.AreEqual(0xFF, cpu.Regs.D);
             Assert.AreEqual(0xFF, cpu.Regs.H);
 
-            Assert.IsTrue(cpu.IsSet(Flags.ZERO | Flags.SUB));
+            Assert.IsTrue(cpu.Regs.IsSet(Flags.ZERO | Flags.SUB));
             cpu.LoadTestData(0x15, 0x10).Run();
             Assert.AreEqual(0xFE, cpu.Regs.D);
-            Assert.IsTrue(cpu.IsSet(Flags.SUB));
+            Assert.IsTrue(cpu.Regs.IsSet(Flags.SUB));
         }
     }
 }
