@@ -906,7 +906,7 @@ namespace GB.emu
                 case 0xC5:
                 case 0xD5:
                 case 0xE5:
-                    Memory.Push(Regs[HighBit - 0x8]);
+                    Memory.Push(Regs[HighBit - 0xB]);
                     Cycles = 4;
                     break;
                 case 0xF5:

@@ -51,12 +51,10 @@ namespace GBTesting
         /// </summary>
         public TestCPU Run()
         {
-            bool run = true;
-            while (run)
+            CPUMode = CPUMode.NORMAL;
+            while (CPUMode == CPUMode.NORMAL)
             {
                 Execute(Fetch());
-                if (CPUMode != CPUMode.NORMAL)
-                    run = false;
             }
             return this;
         }
@@ -72,7 +70,7 @@ namespace GBTesting
                     return base.Fetch();
                 default:
                 case FetchMode.ZERO:
-                    return 0;
+                    return 0x10;
                 case FetchMode.RANDOM:
                     byte[] data = new byte[1];
                     Random.NextBytes(data);

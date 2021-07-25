@@ -18,10 +18,11 @@ namespace GBTesting
         {
             TestCPU cpu = new TestCPU(Rom.Empty);
             cpu.OCErrorMode = OCErrorMode.PRINT;
-            cpu.ReportOpcodes = true;
-            for (byte opcode = 0x00; opcode <= 0xBF; opcode++)
+            cpu.FetchMode = FetchMode.ZERO;
+            cpu.ReportOpcodes = false;
+            for (int opcode = 0x00; opcode <= 0xFF; opcode++)
             {
-                cpu.LoadTestData(opcode, 0x10).Run().ClearTestData();
+                cpu.LoadTestData((byte)opcode).Run();
             }
         }
     }
