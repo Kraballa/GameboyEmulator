@@ -33,7 +33,7 @@ namespace GB
         public void LoadRom(Rom rom)
         {
             CPU = new CPU(rom);
-            CPU.OCErrorMode = OCErrorMode.NOTHING;
+            CPU.OCErrorMode = OCErrorMode.ERROR;
             Title = CPU.Rom.Header.Title;
             Window.Title = Title;
         }

@@ -112,7 +112,7 @@ namespace GB.emu
             regs[index] = (ushort)(value | (regs[index] & 0xf0));
         }
 
-        public byte GetByteByIndex(uint index)
+        public byte GetByte(uint index)
         {
             switch (index)
             {
@@ -131,6 +131,35 @@ namespace GB.emu
                     return H;
                 case 6:
                     return L;
+            }
+        }
+
+        public void SetByte(uint index, byte value)
+        {
+            switch (index)
+            {
+                default:
+                case 0:
+                    A = value;
+                    break;
+                case 1:
+                    B = value;
+                    break;
+                case 2:
+                    C = value;
+                    break;
+                case 3:
+                    D = value;
+                    break;
+                case 4:
+                    E = value;
+                    break;
+                case 5:
+                    H = value;
+                    break;
+                case 6:
+                    L = value;
+                    break;
             }
         }
 
