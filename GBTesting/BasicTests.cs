@@ -9,11 +9,14 @@ namespace GBTesting
     [TestClass]
     public class BasicTests
     {
+        private TestCPU CPU;
 
-        [TestMethod]
-        public void TestEmptyRom()
+        [TestInitialize]
+        public void Setup()
         {
-            TestCPU cpu = new TestCPU(Rom.Empty);
+            CPU = new TestCPU(Rom.Empty);
+            CPU.FetchMode = FetchMode.ZERO;
+            CPU.OCErrorMode = OCErrorMode.ERROR;
         }
 
         [TestMethod]
@@ -44,9 +47,16 @@ namespace GBTesting
             cpu.ReportOpcodes = true;
             cpu.LoadTestData(
                 0x06, 0x01, //LD B, 1
-                0xCB, 0x00, //RLC B
-                0x10
+                0xCB, 0x00 //RLC B
                 ).Run();
+            Assert.AreEqual(0b00000010, cpu.Regs.B);
+            Assert.IsTrue(!cpu.Regs.IsSet(Flags.ZERO | Flags.SUB | Flags.CARRY | Flags.HCARRY));
+            cpu.LoadTestData(
+                0x06, 0b11111110, //LD B, 1
+                0xCB, 0x00 //RLC B
+                ).Run();
+            Assert.AreEqual(0b11111101, cpu.Regs.B);
+            Assert.IsTrue(!cpu.Regs.IsSet(Flags.ZERO | Flags.SUB | Flags.HCARRY) && cpu.Regs.IsSet(Flags.CARRY));
         }
     }
 }

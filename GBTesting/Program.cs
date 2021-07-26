@@ -9,9 +9,9 @@ namespace GBTesting
         {
             Console.WriteLine("emulator testing");
 
-            PrintUnknownOpcodes();
+            //PrintUnknownOpcodes();
 
-            //new BasicTests().Test8BitLDDEC();
+            new BasicTests().TestRL();
         }
 
         private static void PrintUnknownOpcodes()
@@ -20,9 +20,16 @@ namespace GBTesting
             cpu.OCErrorMode = OCErrorMode.PRINT;
             cpu.FetchMode = FetchMode.ZERO;
             cpu.ReportOpcodes = false;
+            Console.WriteLine("missing 8 bit opcodes:");
             for (int opcode = 0x00; opcode <= 0xFF; opcode++)
             {
                 cpu.LoadTestData((byte)opcode).Run();
+            }
+
+            Console.WriteLine("missing 16 bit opcodes:");
+            for (int opcode = 0x00; opcode <= 0xFF; opcode++)
+            {
+                cpu.LoadTestData(0xCB, (byte)opcode).Run();
             }
         }
     }

@@ -1126,7 +1126,7 @@ namespace GB.emu
                 #endregion
 
                 default: //unknown opcode
-                    HandleUnknownOpcode(opcode);
+                    HandleUnknownOpcode(opcode, true);
                     break;
             }
             return Cycles;
@@ -1204,20 +1204,34 @@ namespace GB.emu
                 #endregion
 
                 default: //unknown opcode
-                    HandleUnknownOpcode(opcode);
+                    HandleUnknownOpcode(opcode, false);
                     break;
             }
             return Cycles;
         }
 
-        private void HandleUnknownOpcode(byte opcode)
+        private void HandleUnknownOpcode(byte opcode, bool is8Bit)
         {
             switch (OCErrorMode)
             {
                 case OCErrorMode.ERROR:
-                    throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode));
+                    if (is8Bit)
+                    {
+                        throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode));
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode | 0xCB00));
+                    }
                 case OCErrorMode.PRINT:
-                    Console.WriteLine("unknown opcode: 0x{0:X}", opcode);
+                    if (is8Bit)
+                    {
+                        Console.WriteLine("unknown opcode: 0x{0:X}", opcode);
+                    }
+                    else
+                    {
+                        Console.WriteLine("unknown opcode: 0x{0:X}", opcode | 0xCB00);
+                    }
                     break;
                 default:
                     break;

@@ -84,7 +84,7 @@ namespace GBTesting
             {
                 opcode = Fetch();
                 if (ReportOpcodes)
-                    Console.WriteLine("opcode [16bit]: 0xCB{0:X}", opcode);
+                    Console.WriteLine("opcode [16bit]: 0x{0:X}", opcode | 0xCB00);
                 return base.Execute16Bit(opcode);
             }
             else
