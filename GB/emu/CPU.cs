@@ -164,7 +164,7 @@ namespace GB.emu
                 case 0x20:
                     if (!Regs.IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Regs.PC + Fetch() - 128);
+                        Regs.PC = (ushort)((sbyte)Fetch() + Regs.PC);
                         Cycles = 3;
                     }
                     else
@@ -177,7 +177,7 @@ namespace GB.emu
 
                     if (!Regs.IsSet(Flags.CARRY))
                     {
-                        Regs.PC = (ushort)(Regs.PC + Fetch());
+                        Regs.PC = (ushort)((sbyte)Fetch() + Regs.PC);
                         Cycles = 3;
                     }
                     else
@@ -295,14 +295,14 @@ namespace GB.emu
 
                 #region JR [0|Z|C], s8
                 case 0x18:
-                    Regs.PC = (ushort)(Regs.PC + Fetch());
+                    Regs.PC = (ushort)((sbyte)Fetch() + Regs.PC);
                     Cycles = 3;
                     break;
                 case 0x28:
 
                     if (Regs.IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Regs.PC + Fetch());
+                        Regs.PC = (ushort)((sbyte)Fetch() + Regs.PC);
                         Cycles = 3;
                     }
                     else
@@ -315,7 +315,7 @@ namespace GB.emu
 
                     if (Regs.IsSet(Flags.CARRY))
                     {
-                        Regs.PC = (ushort)(Regs.PC + Fetch());
+                        Regs.PC = (ushort)((sbyte)Fetch() + Regs.PC);
                         Cycles = 3;
                     }
                     else
@@ -785,8 +785,9 @@ namespace GB.emu
                     Cycles = 1;
                     break;
                 case 0xAF:
+                    Regs.A = 0;
                     Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.Set(Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0xBF:
