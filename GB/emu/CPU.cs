@@ -952,7 +952,7 @@ namespace GB.emu
                 case 0xE7:
                 case 0xF7:
                     Memory.Push(Regs.PC);
-                    Regs.PC = (ushort)((HighBit - 0xC) * 0xF);
+                    Regs.PC = (ushort)((HighBit - 0xC) * 0x10);
                     Cycles = 4;
                     break;
                 case 0xCF:
@@ -960,7 +960,7 @@ namespace GB.emu
                 case 0xEF:
                 case 0xFF:
                     Memory.Push(Regs.PC);
-                    Regs.PC = (ushort)((HighBit - 0xC) * 0xF + 8);
+                    Regs.PC = (ushort)((HighBit - 0xC) * 0x10 + 8);
                     Cycles = 4;
                     break;
                 #endregion
