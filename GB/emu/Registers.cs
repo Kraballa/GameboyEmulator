@@ -131,6 +131,8 @@ namespace GB.emu
                     return H;
                 case 6:
                     return L;
+                case 8:
+                    return A;
             }
         }
 
@@ -159,6 +161,9 @@ namespace GB.emu
                     break;
                 case 6:
                     L = value;
+                    break;
+                case 8:
+                    A = value;
                     break;
             }
         }
