@@ -1,17 +1,17 @@
 ﻿using GB.emu;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GBTesting
 {
-    [TestClass]
-    public class BasicTests
+    public class OpcodeTests
     {
         private TestCPU CPU;
 
-        [TestInitialize]
+        public OpcodeTests()
+        {
+            Setup();
+        }
+
         public void Setup()
         {
             CPU = new TestCPU(Rom.Empty);
@@ -19,7 +19,11 @@ namespace GBTesting
             CPU.OCErrorMode = OCErrorMode.ERROR;
         }
 
-        [TestMethod]
+        public void Cleanup()
+        {
+            CPU = null;
+        }
+
         public void Test8BitLDDEC()
         {
             TestCPU cpu = new TestCPU(Rom.Empty);

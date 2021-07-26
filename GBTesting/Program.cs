@@ -8,10 +8,6 @@ namespace GBTesting
         static void Main(string[] args)
         {
             Console.WriteLine("emulator testing");
-
-            PrintUnknownOpcodes();
-
-            //new BasicTests().TestRL();
         }
 
         private static void PrintUnknownOpcodes()

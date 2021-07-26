@@ -49,3 +49,4 @@ This is an overview on what's been implemented and what's still left:
 
 ## Other things to consider
 - replace fixed setting of cycles with dynamically setting it (accessing memory takes 1 cycle per byte, pushing/popping from SP takes 1 cycle per byte, fetching takes 1 byte per fetch)
+- figure out a test framework that works. tried a couple, but seemingly unsolvable issues lead me to think of some custom solution
