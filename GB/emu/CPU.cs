@@ -1138,10 +1138,8 @@ namespace GB.emu
                 case 0xF6:
                 case 0xFC:
                 case 0xFD:
-                    //these opcodes are technically unknown, but they are just not invalid.
-                    //the 'HandleUnknownOpcode' will be refactored for reporting these invalid
-                    //opcodes when all opcodes have been implemented
-                    HandleUnknownOpcode(opcode, true);
+                    //these opcodes are technically unknown, but they are just invalid.
+                    HandleInvalidOpcode(opcode);
                     break;
                     #endregion
             }
@@ -1639,28 +1637,14 @@ namespace GB.emu
             return Cycles;
         }
 
-        private void HandleUnknownOpcode(byte opcode, bool is8Bit)
+        protected void HandleInvalidOpcode(byte opcode)
         {
             switch (OCErrorMode)
             {
                 case OCErrorMode.ERROR:
-                    if (is8Bit)
-                    {
-                        throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode));
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("unknown opcode: 0x{0:X}", opcode | 0xCB00));
-                    }
+                    throw new Exception(string.Format("invalid opcode: 0x{0:X}", opcode));
                 case OCErrorMode.PRINT:
-                    if (is8Bit)
-                    {
-                        Console.WriteLine("unknown opcode: 0x{0:X}", opcode);
-                    }
-                    else
-                    {
-                        Console.WriteLine("unknown opcode: 0x{0:X}", opcode | 0xCB00);
-                    }
+                    Console.WriteLine("invalid opcode: 0x{0:X}", opcode);
                     break;
                 default:
                     break;
