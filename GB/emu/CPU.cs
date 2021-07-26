@@ -1154,7 +1154,7 @@ namespace GB.emu
             int Cycles = 0;
             switch (opcode)
             {
-                #region RLC|RL
+                #region RLC
                 case 0x00:
                 case 0x01:
                 case 0x02:
@@ -1165,7 +1165,7 @@ namespace GB.emu
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
                     Data = Regs.GetByte(LowBit + 1);
                     Regs.SetByte(LowBit + 1, (byte)((Data << 1) | (Data >> 7)));
-                    Regs.Place((Data >> 7) != 0, Flags.CARRY);
+                    Regs.Place((Data & 0b10000000) != 0, Flags.CARRY);
                     Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
                     Cycles = 2;
                     break;
@@ -1173,11 +1173,13 @@ namespace GB.emu
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
                     Data = Memory[Regs.HL];
                     Memory[Regs.HL] = (byte)((Data << 1) | (Data >> 7));
-                    Regs.Place((Data >> 7) != 0, Flags.CARRY);
+                    Regs.Place((Data & 0b10000000) != 0, Flags.CARRY);
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
                     Cycles = 4;
                     break;
+                #endregion
 
+                #region RL
                 case 0x10:
                 case 0x11:
                 case 0x12:
@@ -1186,16 +1188,32 @@ namespace GB.emu
                 case 0x15:
                 case 0x17:
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.Place((Data & 0x10000000) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)((Data << 1) | (Data >> 7)));
+                    Data = (byte)(Regs.GetByte(LowBit + 1) << 1);
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Data |= 0b00000001;
+                    }
+                    else
+                    {
+                        Data &= 0b11111110;
+                    }
+                    Regs.Place((Data & 0b10000000) == 1, Flags.CARRY);
+                    Regs.SetByte(LowBit + 1, Data);
                     Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
                     Cycles = 2;
                     break;
                 case 0x16:
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Regs.Place((Data & 0x10000000) == 1, Flags.CARRY);
+                    Data = (byte)(Memory[Regs.HL] << 1);
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Data |= 0b00000001;
+                    }
+                    else
+                    {
+                        Data &= 0b11111110;
+                    }
+                    Regs.Place((Data & 0b10000000) == 1, Flags.CARRY);
                     Memory[Regs.HL] = (byte)((Data << 1) | (Data >> 7));
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
                     Cycles = 4;
@@ -1250,7 +1268,7 @@ namespace GB.emu
                     break;
                 #endregion
 
-                #region RRC|RR
+                #region RRC
                 case 0x08:
                 case 0x09:
                 case 0x0A:
@@ -1273,7 +1291,9 @@ namespace GB.emu
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
                     Cycles = 4;
                     break;
+                #endregion
 
+                #region RR
                 case 0x18:
                 case 0x19:
                 case 0x1A:
@@ -1282,7 +1302,15 @@ namespace GB.emu
                 case 0x1D:
                 case 0x1F:
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
+                    Data = (byte)(Regs.GetByte(LowBit + 1) >> 1);
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Data |= 0b10000000;
+                    }
+                    else
+                    {
+                        Data &= 0b01111111;
+                    }
                     Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
                     Regs.SetByte(LowBit + 1, (byte)((Data >> 1) | (Data << 7)));
                     Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
@@ -1290,7 +1318,15 @@ namespace GB.emu
                     break;
                 case 0x1E:
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
+                    Data = (byte)(Memory[Regs.HL] >> 1);
+                    if (Regs.IsSet(Flags.CARRY))
+                    {
+                        Data |= 0b10000000;
+                    }
+                    else
+                    {
+                        Data &= 0b01111111;
+                    }
                     Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
                     Memory[Regs.HL] = (byte)((Data >> 1) | (Data << 7));
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
