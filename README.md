@@ -36,9 +36,9 @@ This is an overview on what's been implemented and what's still left:
 - [x] basic support for interrupts
 - [x] basic rendering pipeline (implemented, not working yet)
 - [x] testing pipeline. a modified cpu can be injected with opcodes to test flags and registers
+- [x] fully implement all opcodes
 
 - [ ] render tilemaps and sprite sheets for debugging purposes
-- [ ] fully implement all opcodes. all 8bit opcodes implemented. (~180/255) 16 bit opcodes
 - [ ] rendering results vissible on screen (currently there's nothing visible on screen yet...)
 - [ ] make sure timings and interrupts work properly...
 - [ ] validate execution with tetris
