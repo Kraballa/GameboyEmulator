@@ -9,9 +9,9 @@ namespace GBTesting
         {
             Console.WriteLine("emulator testing");
 
-            //PrintUnknownOpcodes();
+            PrintUnknownOpcodes();
 
-            new BasicTests().TestRL();
+            //new BasicTests().TestRL();
         }
 
         private static void PrintUnknownOpcodes()

@@ -1125,9 +1125,25 @@ namespace GB.emu
                     break;
                 #endregion
 
-                default: //unknown opcode
+                #region Undefined Opcodes
+                case 0xD3:
+                case 0xDB:
+                case 0xDD:
+                case 0xE3:
+                case 0xE4:
+                case 0xEB:
+                case 0xEC:
+                case 0xED:
+                case 0xF4:
+                case 0xF6:
+                case 0xFC:
+                case 0xFD:
+                    //these opcodes are technically unknown, but they are just not invalid.
+                    //the 'HandleUnknownOpcode' will be refactored for reporting these invalid
+                    //opcodes when all opcodes have been implemented
                     HandleUnknownOpcode(opcode, true);
                     break;
+                    #endregion
             }
             return Cycles;
         }
