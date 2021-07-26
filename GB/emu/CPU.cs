@@ -1000,7 +1000,7 @@ namespace GB.emu
 
                 case 0xF8:
                     {
-                        int value = (ushort)(Regs.SP + (Fetch() - 128));
+                        int value = (ushort)(Regs.SP + (sbyte)Fetch());
                         Regs.Place(value > ushort.MaxValue, Flags.CARRY | Flags.HCARRY);
                         Regs.HL = (ushort)value;
                         Cycles = 3;
