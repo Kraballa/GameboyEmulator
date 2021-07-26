@@ -101,6 +101,7 @@ namespace GB.emu
         /// </summary>
         private void OamDmaTransfer(byte written)
         {
+            Console.WriteLine("start oam transfer");
             ushort start = (ushort)(written << 8);
             for (ushort offset = 0x00; offset < 0x9F; offset++)
             {

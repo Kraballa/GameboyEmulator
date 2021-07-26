@@ -104,12 +104,12 @@ namespace GB.emu
 
         public void SetHigh(uint index, byte value)
         {
-            regs[index] = (ushort)((value << 8) | (regs[index] & 0x0f));
+            regs[index] = (ushort)((value << 8) | (regs[index] & 0xFF));
         }
 
         public void SetLow(uint index, byte value)
         {
-            regs[index] = (ushort)(value | (regs[index] & 0xf0));
+            regs[index] = (ushort)(value | (regs[index] & 0xFF00));
         }
 
         public byte GetByte(uint index)
@@ -198,7 +198,7 @@ namespace GB.emu
 
         public void Unset(Flags flags)
         {
-            Flags = Flags & (~flags);
+            Flags = Flags & ~flags;
         }
 
         public bool IsSet(Flags flag)

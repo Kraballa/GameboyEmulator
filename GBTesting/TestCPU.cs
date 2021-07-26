@@ -17,7 +17,7 @@ namespace GBTesting
     /// </summary>
     public class TestCPU : CPU
     {
-        public FetchMode FetchMode = FetchMode.ZERO;
+        public FetchMode FetchMode = FetchMode.ROM;
         public bool ReportOpcodes = false;
 
         private Queue<byte> TestData = new Queue<byte>();
@@ -84,13 +84,13 @@ namespace GBTesting
             {
                 opcode = Fetch();
                 if (ReportOpcodes)
-                    Console.WriteLine("opcode [16bit]: 0x{0:X}", opcode | 0xCB00);
+                    Console.Write("opcode [16bit]: 0x{0:X}\t{1}", opcode | 0xCB00, FlagsToString());
                 return base.Execute16Bit(opcode);
             }
             else
             {
                 if (ReportOpcodes)
-                    Console.WriteLine("opcode  [8bit]: 0x{0:X}", opcode);
+                    Console.WriteLine("opcode  [8bit]: 0x{0:X}\t{1}", opcode, FlagsToString());
                 return base.Execute(opcode);
             }
         }

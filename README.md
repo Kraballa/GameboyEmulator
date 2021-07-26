@@ -19,6 +19,7 @@ Graphics are done via the FNA library.
 - excellent documentation of the hardware and how it interacts: (https://problemkaputt.de/pandocs.htm)
 - implementation of the graphics: (http://www.codeslinger.co.uk/pages/projects/gameboy/graphics.html)
 - there are many more resources. will append as I find and use them
+- BGB is accurate so it can to be used for debugging purposes
 
 ## Code Conventions
 - any hex ciphers that use letters (i.e. 0xFF, 0xA8) must use the capitalized letter

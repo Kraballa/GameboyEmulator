@@ -46,7 +46,7 @@ namespace GB.emu
             //skip starting sequence and jump straight to cartridge start
             Regs.PC = 0x100;
             //set registers to appropriate values
-            Regs.A = 0x01;
+            Regs.AF = 0x01B0;
             Regs.BC = 0x0013;
             Regs.DE = 0x00D8;
             Regs.HL = 0x014D;
@@ -162,10 +162,9 @@ namespace GB.emu
 
                 #region JR NX, s8
                 case 0x20:
-
                     if (!Regs.IsSet(Flags.ZERO))
                     {
-                        Regs.PC = (ushort)(Regs.PC + Fetch());
+                        Regs.PC = (ushort)(Regs.PC + Fetch() - 128);
                         Cycles = 3;
                     }
                     else
@@ -1713,6 +1712,7 @@ namespace GB.emu
 
         private void DoInterrupt(InterruptType type)
         {
+            Console.WriteLine("interrupting: {0}", type);
             Memory.PrevIMEF = Memory.IMEF;
             Memory.IMEF = false;
             Memory[Memory.IFREG] &= (byte)~(1 << (int)type);
