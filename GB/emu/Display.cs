@@ -51,31 +51,11 @@ namespace GB.emu
         public Display(Memory memory)
         {
             Memory = memory;
-
-            HookToMemory();
         }
 
         public int GetMode()
         {
             return Memory[LCDS] & (byte)LCDSReg.Mode;
-        }
-
-        private void HookToMemory()
-        {
-            //when this location is written to, transfer sprite data from ROM or RAM to OAM
-            Memory.MemoryAccessCallback.Add(DMA, OamDmaTransfer);
-        }
-
-        /// <summary>
-        /// Load sprite data from ROM or RAM to OAM (sprite attribute table)
-        /// </summary>
-        private void OamDmaTransfer(byte written)
-        {
-            ushort start = (ushort)(written << 8);
-            for (ushort offset = 0x00; offset < 0x9F; offset++)
-            {
-                Memory[(ushort)(Memory.OAM | offset)] = Memory[(ushort)(start | offset)];
-            }
         }
 
         public void UpdateGraphics(int cycles)

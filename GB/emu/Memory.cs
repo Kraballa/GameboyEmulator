@@ -69,8 +69,8 @@ namespace GB.emu
             set
             {
                 mem[index] = value;
-                if (MemoryAccessCallback.ContainsKey(index))
-                    MemoryAccessCallback[index].Invoke(value);
+                if (index == Display.DMA)
+                    OamDmaTransfer(value);
             }
         }
 
@@ -94,6 +94,18 @@ namespace GB.emu
             CPU.Instance.Regs.SP--;
             data |= this[CPU.Instance.Regs.SP];
             return data;
+        }
+
+        /// <summary>
+        /// Load sprite data from ROM or RAM to OAM (sprite attribute table)
+        /// </summary>
+        private void OamDmaTransfer(byte written)
+        {
+            ushort start = (ushort)(written << 8);
+            for (ushort offset = 0x00; offset < 0x9F; offset++)
+            {
+                this[(ushort)(OAM | offset)] = this[(ushort)(start | offset)];
+            }
         }
 
         /// <summary>
