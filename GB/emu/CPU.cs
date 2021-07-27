@@ -250,12 +250,14 @@ namespace GB.emu
                 case 0x05:
                 case 0x15:
                 case 0x25:
+                    Regs.CheckHCarryDec(Regs.GetHigh(HighBit + 1), 1);
                     Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) - 1)); //--
                     Regs.Set(Flags.SUB);
                     Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x35:
+                    Regs.CheckHCarryDec(Memory[Regs.HL], 1);
                     Memory[Regs.HL]--;
                     Regs.Set(Flags.SUB);
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
@@ -388,14 +390,14 @@ namespace GB.emu
                 case 0x0D:
                 case 0x1D:
                 case 0x2D:
-                    Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.HCARRY);
+                    Regs.CheckHCarryDec(Regs.GetLow(HighBit + 1), 1);
                     Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) - 1)); //--
                     Regs.Set(Flags.SUB);
                     Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x3D:
-                    Regs.Place(Regs.A == 0, Flags.HCARRY);
+                    Regs.CheckHCarryDec(Regs.A, 1);
                     Regs.A--;
                     Regs.Set(Flags.SUB);
                     Regs.Place(Regs.A == 0, Flags.ZERO);

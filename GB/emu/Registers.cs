@@ -179,15 +179,17 @@ namespace GB.emu
             Flags = flags;
         }
 
-        public void Place(bool value, Flags flag)
+        public bool Place(bool value, Flags flag)
         {
             if (value)
             {
                 Set(flag);
+                return true;
             }
             else
             {
                 Unset(flag);
+                return false;
             }
         }
 
@@ -208,34 +210,20 @@ namespace GB.emu
 
         public bool CheckHCarry(byte a, byte b)
         {
-            a &= 0xF;
-            b &= 0xF;
-            if (((a + b) & 0x10) == 0x10)
-            {
-                Set(Flags.HCARRY);
-                return true;
-            }
-            else
-            {
-                Unset(Flags.HCARRY);
-                return false;
-            }
+            byte result = (byte)(a + b);
+            return Place(((a ^ b ^ result) & 0x10) > 0, Flags.HCARRY);
+        }
+
+        public bool CheckHCarryDec(byte a, byte b)
+        {
+            byte result = (byte)(a - b);
+            return Place(((a ^ (-b) ^ result) & 0x10) > 0, Flags.HCARRY);
         }
 
         public bool CheckHCarry(ushort a, ushort b)
         {
-            a &= 0xFF;
-            b &= 0xFF;
-            if (((a + b) & 0x100) == 0x100)
-            {
-                Set(Flags.HCARRY);
-                return true;
-            }
-            else
-            {
-                Unset(Flags.HCARRY);
-                return false;
-            }
+            ushort result = (ushort)(a + b);
+            return Place(((a ^ b ^ result) & 0x1000) > 0, Flags.HCARRY);
         }
 
         public override string ToString()
