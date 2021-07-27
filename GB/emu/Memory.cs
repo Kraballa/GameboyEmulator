@@ -33,6 +33,12 @@ namespace GB.emu
         Unusable,
     }
 
+    public enum SerialControl
+    {
+        TRANSFER_START = 0b10000000,
+        SHIFT_CLOCK = 0b00000001
+    }
+
     public class Memory
     {
         public const ushort BANK0 = 0x0000;
@@ -45,6 +51,8 @@ namespace GB.emu
         public const ushort OAM = 0xFE00; //sprite attribute table, called OAM (object attribute memory)
         public const ushort OAMEnd = 0xFE9F;
         public const ushort IO = 0xFF00;
+        public const ushort SERIALDATA = 0xFF01; //8bit data that is being transferred
+        public const ushort SERIALTC = 0xFF02; //transfer control register. writing bit 7 = 1 initiates serial transfer
         public const ushort HiRAM = 0xFF80;
         public const ushort IFREG = 0xFF0F; //Interrupt Request Register
         public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
@@ -55,6 +63,8 @@ namespace GB.emu
         public bool PrevIMEF { get; set; }
 
         public byte[] Mem { get => mem; } //only use for reading VRAM, OAM or Debugging
+
+        public Action<byte> ReceiveSerialByte;
 
         private byte[] mem = new byte[0x10000];
 
@@ -71,6 +81,15 @@ namespace GB.emu
                 mem[index] = value;
                 if (index == Display.DMA)
                     OamDmaTransfer(value);
+                if (index == SERIALTC)
+                {
+                    if ((Mem[SERIALTC] & (byte)SerialControl.TRANSFER_START) > 0)
+                    {
+                        ReceiveSerialByte?.Invoke(this[SERIALDATA]);
+                        Mem[SERIALTC] &= 0b01111111;
+                        CPU.Instance.RequestInterrupt(InterruptType.SERIAL);
+                    }
+                }
             }
         }
 

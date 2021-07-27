@@ -77,7 +77,7 @@ namespace GB.emu
                 ScanlineCounter = 456;
 
                 if (Memory[LY] == 144)
-                    CPU.Instance.RequestInterrupt(InterruptType.VBlank);
+                    CPU.Instance.RequestInterrupt(InterruptType.VBLANK);
 
                 if (Memory[LY] > 153)
                 {

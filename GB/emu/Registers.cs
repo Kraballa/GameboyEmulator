@@ -206,6 +206,38 @@ namespace GB.emu
             return (Flags & flag) == flag;
         }
 
+        public bool CheckHCarry(byte a, byte b)
+        {
+            a &= 0xF;
+            b &= 0xF;
+            if (((a + b) & 0x10) == 0x10)
+            {
+                Set(Flags.HCARRY);
+                return true;
+            }
+            else
+            {
+                Unset(Flags.HCARRY);
+                return false;
+            }
+        }
+
+        public bool CheckHCarry(ushort a, ushort b)
+        {
+            a &= 0xFF;
+            b &= 0xFF;
+            if (((a + b) & 0x100) == 0x100)
+            {
+                Set(Flags.HCARRY);
+                return true;
+            }
+            else
+            {
+                Unset(Flags.HCARRY);
+                return false;
+            }
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

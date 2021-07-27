@@ -51,6 +51,8 @@ namespace GB.emu
             Regs.DE = 0x00D8;
             Regs.HL = 0x014D;
             Regs.SP = 0xFFFE;
+
+            Memory.ReceiveSerialByte = PrintByte;
         }
 
         public virtual void Step()
@@ -229,17 +231,17 @@ namespace GB.emu
                 case 0x04:
                 case 0x14:
                 case 0x24:
+                    Regs.CheckHCarry(Regs.GetHigh(HighBit + 1), 1);
                     Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) + 1)); //++
                     Regs.Unset(Flags.SUB);
-                    if (Regs.GetHigh(HighBit + 1) == 0)
-                        Regs.Set(Flags.ZERO | Flags.HCARRY);
+                    Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x34:
+                    Regs.CheckHCarry(Memory[Regs.HL], 1);
                     Memory[Regs.HL]++;
                     Regs.Unset(Flags.SUB);
-                    if (Regs.B == 0)
-                        Regs.Set(Flags.ZERO | Flags.HCARRY);
+                    Regs.Set(Flags.ZERO);
                     Cycles = 3;
                     break;
                 #endregion
@@ -248,14 +250,12 @@ namespace GB.emu
                 case 0x05:
                 case 0x15:
                 case 0x25:
-                    Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.HCARRY);
                     Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) - 1)); //--
                     Regs.Set(Flags.SUB);
                     Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x35:
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.HCARRY);
                     Memory[Regs.HL]--;
                     Regs.Set(Flags.SUB);
                     Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
@@ -331,7 +331,8 @@ namespace GB.emu
                 case 0x19:
                 case 0x29:
                 case 0x39:
-                    Regs.Place((uint)Regs.HL + Regs[HighBit + 1] > ushort.MaxValue, Flags.CARRY | Flags.HCARRY);
+                    Regs.CheckHCarry(Regs.HL, Regs[HighBit + 1]);
+                    Regs.Place((uint)Regs.HL + Regs[HighBit + 1] > ushort.MaxValue, Flags.CARRY);
                     Regs.HL += Regs[HighBit + 1];
                     Regs.Unset(Flags.SUB);
                     Cycles = 2;
@@ -368,15 +369,17 @@ namespace GB.emu
                 case 0x0C:
                 case 0x1C:
                 case 0x2C:
+                    Regs.CheckHCarry(Regs.GetLow(HighBit + 1), 1);
                     Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) + 1)); //++
                     Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO | Flags.HCARRY);
+                    Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 case 0x3C:
+                    Regs.CheckHCarry(Regs.A, 1);
                     Regs.A++;
                     Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.A == 0, Flags.ZERO | Flags.HCARRY);
+                    Regs.Place(Regs.A == 0, Flags.ZERO);
                     Cycles = 1;
                     break;
                 #endregion
@@ -586,7 +589,8 @@ namespace GB.emu
                     {
                         Regs.Set(Flags.SUB);
                         int val = Regs.GetByte(LowBit + 1);
-                        Regs.Place(Regs.A - val < 0, Flags.CARRY | Flags.HCARRY);
+                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY);
+                        Regs.CheckHCarry(Regs.A, (byte)val);
                         Regs.A += (byte)val;
                         Regs.Place(Regs.A == 0, Flags.ZERO);
                         Cycles = 1;
@@ -596,7 +600,8 @@ namespace GB.emu
                     {
                         int val = Regs.A - Memory[Regs.HL];
                         Regs.A -= Memory[Regs.HL];
-                        Regs.Place(val < 0, Flags.CARRY | Flags.HCARRY);
+                        Regs.Unset(Flags.HCARRY);
+                        Regs.Place(val < 0, Flags.CARRY);
                         Regs.Set(Flags.SUB);
                         Regs.Place(Regs.A == 0, Flags.ZERO);
                         Cycles = 2;
@@ -648,7 +653,8 @@ namespace GB.emu
 
                 #region things with A
                 case 0x87:
-                    Regs.Place(Regs.A > 0x0F, Flags.CARRY | Flags.HCARRY);
+                    Regs.CheckHCarry(Regs.A, Regs.A);
+                    Regs.Place(Regs.A > 0x0F, Flags.CARRY);
                     Regs.A += Regs.A;
                     Regs.Unset(Flags.SUB);
                     Regs.Place(Regs.A == 0, Flags.ZERO);
@@ -1673,6 +1679,11 @@ namespace GB.emu
             return Cycles;
         }
 
+        public void PrintByte(byte data)
+        {
+            Console.Write((char)data);
+        }
+
         protected void HandleInvalidOpcode(byte opcode)
         {
             switch (OCErrorMode)
@@ -1721,16 +1732,19 @@ namespace GB.emu
 
             switch (type)
             {
-                case InterruptType.VBlank:
+                case InterruptType.VBLANK:
                     Regs.PC = 0x40;
                     break;
                 case InterruptType.LCD:
                     Regs.PC = 0x48;
                     break;
-                case InterruptType.Timer:
+                case InterruptType.TIMER:
                     Regs.PC = 0x50;
                     break;
-                case InterruptType.Joypad:
+                case InterruptType.SERIAL:
+                    Regs.PC = 0x58;
+                    break;
+                case InterruptType.JOYPAD:
                     Regs.PC = 0x60;
                     break;
             }
