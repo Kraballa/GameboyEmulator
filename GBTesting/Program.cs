@@ -11,12 +11,7 @@ namespace GBTesting
 
             TestCPU CPU = new TestCPU(new Rom("tetris.gb"));
             CPU.ReportOpcodes = true;
-            CPU.Regs.Set(Flags.CARRY | Flags.HCARRY | Flags.SUB | Flags.ZERO);
-            CPU.Regs.Unset(Flags.CARRY | Flags.HCARRY | Flags.SUB | Flags.ZERO);
-            Console.WriteLine(CPU.FlagsToString());
-            CPU.Step();
-
-
+            CPU.Run();
         }
 
         private static void PrintUnknownOpcodes()
