@@ -92,49 +92,37 @@ namespace GB.emu
 
         private void SetLCDStatus()
         {
-            byte status = Memory[LCDS];
             if ((Memory[LCDC] & (byte)LCDCReg.DisplayEnable) == 0)
             {
                 ScanlineCounter = 456;
                 Memory[LY] = 0;
-                status &= 0b11111100;
-                status |= 0b1;
-                Memory[LCDS] = status;
+                Memory[LCDS] = (byte)((Memory[LCDS] & 0b11111100) + 1);
                 return;
             }
 
             byte currentLine = Memory[LY];
-            byte currentMode = (byte)(status & (byte)LCDSReg.Mode);
+            byte currentMode = (byte)(Memory[LCDS] & (byte)LCDSReg.Mode);
             byte newMode;
             bool needInterrupt = false;
 
             if (currentLine >= 144)
             {
-                newMode = 1;
-                status |= 1;
-                status &= 0b11111101;
-                needInterrupt = (status & (1 << 4)) != 0;
+                SetNewMode(newMode = 1);
+                needInterrupt = (Memory[LCDS] & (byte)LCDSReg.Mode1VBlkInterrupt) != 0;
+            }
+            else if (ScanlineCounter >= MODE2BOUNDS)
+            {
+                SetNewMode(newMode = 2);
+                needInterrupt = (Memory[LCDS] & (byte)LCDSReg.Mode2OAMInterrupt) != 0;
+            }
+            else if (ScanlineCounter >= MODE3BOUNDS)
+            {
+                SetNewMode(newMode = 3);
             }
             else
             {
-                if (ScanlineCounter >= MODE2BOUNDS)
-                {
-                    newMode = 2;
-                    status |= 0b10;
-                    status &= 0b11111110;
-                    needInterrupt = (status & (1 << 5)) != 0;
-                }
-                else if (ScanlineCounter >= MODE3BOUNDS)
-                {
-                    newMode = 3;
-                    status |= 0b11;
-                }
-                else
-                {
-                    newMode = 0;
-                    status &= 0b11111100;
-                    needInterrupt = (status & (1 << 3)) != 0;
-                }
+                SetNewMode(newMode = 0);
+                needInterrupt = (Memory[LCDS] & (byte)LCDSReg.Mode0HBlkInterrupt) != 0;
             }
 
             if (needInterrupt && (newMode != currentMode))
@@ -144,21 +132,21 @@ namespace GB.emu
 
             if (Memory[LY] == Memory[LYC])
             {
-                status |= (1 << 2);
-                if ((status & (1 << 6)) != 0)
+                Memory[LCDS] |= (byte)LCDSReg.Coincidence;
+                if ((Memory[LCDS] & (byte)LCDSReg.LYCEQLYInterrupt) != 0)
                     CPU.Instance.RequestInterrupt(InterruptType.LCD);
             }
             else
             {
-                status &= 0b11111011;
+                Memory[LCDS] &= 0b11111011;
             }
-            Memory[LCDS] = status;
         }
 
         private void RenderScanline()
         {
-            Controller.Instance.GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
+            //Controller.Instance.GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
             Render.Begin();
+            Memory[LCDC] = 0xFF;
             if ((Memory[LCDC] & (byte)LCDCReg.BGDisplayEnable) != 0)
             {
                 RenderTiles();
@@ -223,7 +211,7 @@ namespace GB.emu
                 }
             }
 
-            byte yPos = 0;
+            byte yPos;
             if (!usingWindow)
                 yPos = (byte)(scrollY + Memory[LY]);
             else
@@ -259,16 +247,50 @@ namespace GB.emu
                 byte line = (byte)((yPos % 8) * 2);
                 byte data1 = Memory[(ushort)(tileLocation + line)];
                 byte data2 = Memory[(ushort)(tileLocation + line + 1)];
-                int colourBit = xPos % 8;
-                colourBit -= 7;
-                colourBit *= -1;
 
-                int colourNum = (data2 & (1 << colourBit)) >> colourBit;
-                colourNum <<= 1;
-                colourNum |= (data1 & (1 << colourBit)) >> colourBit;
-                Color color = DecodeColor(colourNum, 0xFF47);
+                RenderTile(xPos, pixelX, pixelY, data1, data2);
+            }
+        }
 
-                Render.Point(new Vector2(pixelX, pixelY), color);
+        private void RenderTile(byte xPos, int pixelX, int pixelY, byte data1, byte data2)
+        {
+            int colourBit = xPos % 8;
+            colourBit -= 7;
+            colourBit *= -1;
+
+            int colourNum = (data2 & (1 << colourBit)) >> colourBit;
+            colourNum <<= 1;
+            colourNum |= (data1 & (1 << colourBit)) >> colourBit;
+            Color color = DecodeColor(colourNum, 0xFF47);
+
+            Render.Point(new Vector2(pixelX, pixelY), color);
+        }
+
+        public void RenderDebugTiles(int x, int y)
+        {
+            for (int i = 0; i < 192; i++)
+            {
+                byte[] data = new byte[16];
+                for (int j = 0; j < 16; j++)
+                {
+                    data[j] = Memory[(ushort)(i + j + 0x8000)];
+                }
+                RenderDebugTile(i % 8 + x, i / 8 + y, data);
+            }
+        }
+
+        //interpret 16 bytes of data as a tile
+        private void RenderDebugTile(int tileX, int tileY, byte[] data)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    int index = (data[y * 2] & (1 << x)) << 1;
+                    index |= data[y * 2 + 1] & (1 << x);
+                    Color color = DecodeColor(index, 0xFF47);
+                    Render.Point(new Vector2(tileX * 8 + x, tileY * 8 + y), color);
+                }
             }
         }
 
@@ -363,13 +385,24 @@ namespace GB.emu
             color <<= 1;
             color |= (palette & (1 << lo)) >> lo;
 
+            return ColorFromIndex(color);
+        }
+
+        private Color ColorFromIndex(int color)
+        {
             switch (color)
             {
-                case 0: return Color.White;
-                case 1: return new Color(170, 170, 170);
-                case 2: return new Color(85, 85, 85);
-                default: return Color.Black;
+                case 0: return Palette.White;
+                case 1: return Palette.LightGray;
+                case 2: return Palette.DarkGray;
+                default: return Palette.Black;
             }
+        }
+
+        private void SetNewMode(byte mode)
+        {
+            Memory[LCDS] &= 0b11111100;
+            Memory[LCDS] |= mode;
         }
     }
 }
