@@ -118,37 +118,18 @@ namespace GB.emu
                     Cycles = Execute16Bit(Fetch());
                     break;
                 case 0x2F:
-                    Regs.A ^= 0b11111111; //flip all bits
+                    Regs.A ^= 0xFF; //flip all bits
                     Regs.Set(Flags.SUB | Flags.HCARRY);
                     Cycles = 1;
                     break;
                 case 0x3F:
                     Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Regs.Flags ^= Flags.CARRY;
-                    break;
-                case 0x27: //DAA. see https://forums.nesdev.com/viewtopic.php?t=15944
-                    if (!Regs.IsSet(Flags.SUB))
-                    {
-                        if (Regs.IsSet(Flags.CARRY) || Regs.A > 0x99)
-                        {
-                            Regs.A += 0x60;
-                            Regs.Set(Flags.CARRY);
-                        }
-                        if (Regs.IsSet(Flags.HCARRY) || (Regs.A & 0x0F) > 0x09)
-                        {
-                            Regs.A += 0x6;
-                        }
-                    }
-                    else
-                    {
-                        if (Regs.IsSet(Flags.CARRY))
-                            Regs.A -= 0x60;
-                        if (Regs.IsSet(Flags.HCARRY))
-                            Regs.A -= 0x6;
-                    }
+                    Regs.Flip(Flags.CARRY);
                     Cycles = 1;
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
-                    Regs.Unset(Flags.HCARRY);
+                    break;
+                case 0x27:
+                    ALU.DAA(Regs.A);
+                    Cycles = 1;
                     break;
 
                 case 0x37:
@@ -233,17 +214,11 @@ namespace GB.emu
                 case 0x04:
                 case 0x14:
                 case 0x24:
-                    Regs.CheckHCarry(Regs.GetHigh(HighBit + 1), 1);
-                    Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) + 1)); //++
-                    Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
+                    Regs.SetHigh(HighBit + 1, ALU.INCD8(Regs.GetHigh(HighBit + 1)));
                     Cycles = 1;
                     break;
                 case 0x34:
-                    Regs.CheckHCarry(Memory[Regs.HL], 1);
-                    Memory[Regs.HL]++;
-                    Regs.Unset(Flags.SUB);
-                    Regs.Set(Flags.ZERO);
+                    Memory[Regs.HL] = (byte)ALU.INCD8(Memory[Regs.HL]);
                     Cycles = 3;
                     break;
                 #endregion
@@ -252,17 +227,11 @@ namespace GB.emu
                 case 0x05:
                 case 0x15:
                 case 0x25:
-                    Regs.CheckHCarryDec(Regs.GetHigh(HighBit + 1), 1);
-                    Regs.SetHigh(HighBit + 1, (byte)(Regs.GetHigh(HighBit + 1) - 1)); //--
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Regs.GetHigh(HighBit + 1) == 0, Flags.ZERO);
+                    Regs.SetHigh(HighBit + 1, ALU.DECD8(Regs.GetHigh(HighBit + 1)));
                     Cycles = 1;
                     break;
                 case 0x35:
-                    Regs.CheckHCarryDec(Memory[Regs.HL], 1);
-                    Memory[Regs.HL]--;
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Memory[Regs.HL] = (byte)ALU.DECD8(Memory[Regs.HL]);
                     Cycles = 3;
                     break;
                 #endregion
@@ -335,10 +304,7 @@ namespace GB.emu
                 case 0x19:
                 case 0x29:
                 case 0x39:
-                    Regs.CheckHCarry(Regs.HL, Regs[HighBit + 1]);
-                    Regs.Place((uint)Regs.HL + Regs[HighBit + 1] > ushort.MaxValue, Flags.CARRY);
-                    Regs.HL += Regs[HighBit + 1];
-                    Regs.Unset(Flags.SUB);
+                    Regs.HL = (ushort)ALU.ADD16(Regs.HL, Regs[HighBit + 1]);
                     Cycles = 2;
                     break;
                 #endregion
@@ -373,17 +339,11 @@ namespace GB.emu
                 case 0x0C:
                 case 0x1C:
                 case 0x2C:
-                    Regs.CheckHCarry(Regs.GetLow(HighBit + 1), 1);
-                    Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) + 1)); //++
-                    Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO);
+                    Regs.SetLow(HighBit + 1, (byte)ALU.INCD8(Regs.GetLow(HighBit + 1)));
                     Cycles = 1;
                     break;
                 case 0x3C:
-                    Regs.CheckHCarry(Regs.A, 1);
-                    Regs.A++;
-                    Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.INCD8(Regs.A);
                     Cycles = 1;
                     break;
                 #endregion
@@ -392,17 +352,11 @@ namespace GB.emu
                 case 0x0D:
                 case 0x1D:
                 case 0x2D:
-                    Regs.CheckHCarryDec(Regs.GetLow(HighBit + 1), 1);
-                    Regs.SetLow(HighBit + 1, (byte)(Regs.GetLow(HighBit + 1) - 1)); //--
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Regs.GetLow(HighBit + 1) == 0, Flags.ZERO);
+                    Regs.SetLow(HighBit + 1, (byte)ALU.DECD8(Regs.GetLow(HighBit + 1)));
                     Cycles = 1;
                     break;
                 case 0x3D:
-                    Regs.CheckHCarryDec(Regs.A, 1);
-                    Regs.A--;
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.DECD8(Regs.A);
                     Cycles = 1;
                     break;
                 #endregion
@@ -422,16 +376,11 @@ namespace GB.emu
 
                 #region RR(C)A
                 case 0x0F:
-                    Data = (byte)(Regs.A & 0x1);
-                    Regs.A >>= 1;
-                    Regs.A |= (byte)(Data << 7);
-                    Regs.FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A0 to CY
+                    Regs.A = (byte)ALU.RRC(Regs.A);
                     Cycles = 1;
                     break;
                 case 0x1F:
-                    Data = (byte)(Regs.A & 0x1);
-                    Regs.A >>= 1;
-                    Regs.FlushFlags(Data != 0 ? Flags.CARRY : 0); //write A0 to CY
+                    Regs.A = (byte)ALU.RR(Regs.A);
                     Cycles = 1;
                     break;
                 #endregion
@@ -467,7 +416,7 @@ namespace GB.emu
                 case 0x73:
                 case 0x74:
                 case 0x75:
-                    Memory[Regs.HL] = Regs.GetByte(LowBit + 1);
+                    Memory[Regs.HL] = (byte)Regs.GetByte(LowBit + 1);
                     Cycles = 1;
                     break;
                 #endregion
@@ -513,7 +462,7 @@ namespace GB.emu
                 case 0x4D:
                 case 0x5D:
                 case 0x6D:
-                    Regs.SetLow(HighBit - 3, Regs.GetByte(LowBit + 1));
+                    Regs.SetLow(HighBit - 3, (byte)Regs.GetByte(LowBit + 1));
                     Cycles = 1;
                     break;
                 #endregion
@@ -525,7 +474,7 @@ namespace GB.emu
                 case 0x7B:
                 case 0x7C:
                 case 0x7D:
-                    Regs.A = Regs.GetByte(LowBit + 1);
+                    Regs.A = (byte)Regs.GetByte(LowBit + 1);
                     Cycles = 1;
                     break;
                 #endregion
@@ -554,34 +503,20 @@ namespace GB.emu
                     break;
                 #endregion
 
-                #region ADD A, [B|C|D|E|H|L]
+                #region ADD A, [B|C|D|E|H|L|(HL)]
                 case 0x80:
                 case 0x81:
                 case 0x82:
                 case 0x83:
                 case 0x84:
                 case 0x85:
-                    {
-                        Regs.Unset(Flags.SUB);
-                        Regs.CheckHCarry(Regs.A, Regs.GetByte(LowBit + 1));
-                        int val = Regs.GetByte(LowBit + 1);
-                        Regs.Place(Regs.A + val > ushort.MaxValue, Flags.CARRY);
-                        Regs.A += (byte)val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 1;
-                    }
+                    Regs.A = (byte)ALU.ADDD8D8(Regs.A, Regs.GetByte(LowBit + 1));
+                    Cycles = 1;
                     break;
 
                 case 0x86:
-                    {
-                        Regs.CheckHCarry(Regs.A, Memory[Regs.HL]);
-                        int val = Regs.A + Memory[Regs.HL];
-                        Regs.A += Memory[Regs.HL];
-                        Regs.Place(val > byte.MaxValue, Flags.CARRY);
-                        Regs.Unset(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.ADDD8D8(Regs.A, Memory[Regs.HL]);
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -592,27 +527,12 @@ namespace GB.emu
                 case 0x93:
                 case 0x94:
                 case 0x95:
-                    {
-                        Regs.Set(Flags.SUB);
-                        int val = Regs.GetByte(LowBit + 1);
-                        Regs.CheckHCarry(Regs.A, (byte)val);
-                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY);
-                        Regs.CheckHCarry(Regs.A, (byte)val);
-                        Regs.A += (byte)val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 1;
-                    }
+                    Regs.A = (byte)ALU.SUBD8D8(Regs.A, Regs.GetByte(LowBit + 1));
+                    Cycles = 1;
                     break;
                 case 0x96:
-                    {
-                        Regs.CheckHCarryDec(Regs.A, Memory[Regs.HL]);
-                        int val = Regs.A - Memory[Regs.HL];
-                        Regs.A -= Memory[Regs.HL];
-                        Regs.Place(val < 0, Flags.CARRY);
-                        Regs.Set(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.SUBD8D8(Regs.A, Memory[Regs.HL]);
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -623,17 +543,11 @@ namespace GB.emu
                 case 0xA3:
                 case 0xA4:
                 case 0xA5:
-                    Regs.A &= Regs.GetByte(LowBit + 1);
-                    Regs.Set(Flags.HCARRY);
-                    Regs.Unset(Flags.SUB | Flags.CARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.AND(Regs.A, Regs.GetByte(LowBit + 1));
                     Cycles = 1;
                     break;
                 case 0xA6:
-                    Regs.A &= Memory[Regs.HL];
-                    Regs.Set(Flags.HCARRY);
-                    Regs.Unset(Flags.SUB | Flags.CARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.AND(Regs.A, Memory[Regs.HL]);
                     Cycles = 2;
                     break;
                 #endregion
@@ -645,43 +559,30 @@ namespace GB.emu
                 case 0xB3:
                 case 0xB4:
                 case 0xB5:
-                    Regs.A |= Regs.GetByte(LowBit + 1);
-                    Regs.Unset(Flags.SUB | Flags.HCARRY | Flags.CARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.OR(Regs.A, Regs.GetByte(LowBit + 1));
                     Cycles = 1;
                     break;
                 case 0xB6:
-                    Regs.A |= Memory[Regs.HL];
-                    Regs.Unset(Flags.SUB | Flags.HCARRY | Flags.CARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.OR(Regs.A, Memory[Regs.HL]);
                     Cycles = 2;
                     break;
                 #endregion
 
                 #region things with A
                 case 0x87:
-                    Regs.CheckHCarry(Regs.A, Regs.A);
-                    Regs.Place(Regs.A > 0x0F, Flags.CARRY);
-                    Regs.A += Regs.A;
-                    Regs.Unset(Flags.SUB);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.ADDD8D8(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 case 0x97:
-                    Regs.CheckHCarryDec(Regs.A, Regs.A);
-                    Regs.A = 0;
-                    Regs.Set(Flags.SUB | Flags.ZERO);
-                    Regs.Unset(Flags.CARRY);
+                    Regs.A = (byte)ALU.SUBD8D8(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 case 0xA7:
-                    Regs.FlushFlags(Flags.HCARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.AND(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 case 0xB7:
-                    Regs.FlushFlags(0);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.OR(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
 
@@ -694,29 +595,13 @@ namespace GB.emu
                 case 0x8B:
                 case 0x8C:
                 case 0x8D:
-                    {
-                        Regs.Unset(Flags.SUB);
-                        int val = Regs.GetByte(LowBit + 1);
-                        val += Regs.IsSet(Flags.CARRY) ? 1 : 0;
-                        Regs.CheckHCarry(Regs.A, (byte)val); //TODO: this might break if val is >0xFF
-                        Regs.Place(Regs.A + val > ushort.MaxValue, Flags.CARRY);
-                        Regs.A += (byte)val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 1;
-                    }
+                    Regs.A = (byte)ALU.ADC(Regs.A, Regs.GetByte(LowBit + 1));
+                    Cycles = 1;
                     break;
 
                 case 0x8E:
-                    {
-                        int val = Memory[Regs.HL];
-                        val += Regs.IsSet(Flags.CARRY) ? 1 : 0;
-                        Regs.CheckHCarry(Regs.A, (byte)val); //TODO: this might break if val is >0xFF
-                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY);
-                        Regs.A += Memory[Regs.HL];
-                        Regs.Unset(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.ADC(Regs.A, Memory[Regs.HL]);
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -727,28 +612,12 @@ namespace GB.emu
                 case 0x9B:
                 case 0x9C:
                 case 0x9D:
-                    {
-                        Regs.Set(Flags.SUB);
-                        int val = Regs.GetByte(LowBit + 1);
-                        val += Regs.IsSet(Flags.CARRY) ? 1 : 0;
-                        Regs.CheckHCarryDec(Regs.A, (byte)val); //TODO: might break if register was already > 0xFF
-                        Regs.Place(Regs.A - val < 0, Flags.CARRY);
-                        Regs.A += (byte)val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 1;
-                    }
+                    Regs.A = (byte)ALU.SBC(Regs.A, Regs.GetByte(LowBit + 1));
+                    Cycles = 1;
                     break;
                 case 0x9E:
-                    {
-                        int val = Regs.A - Memory[Regs.HL];
-                        val += Regs.IsSet(Flags.CARRY) ? 1 : 0;
-                        Regs.CheckHCarryDec(Regs.A, Memory[Regs.HL]); //TODO: might break if register was already > 0xFF
-                        Regs.A -= Memory[Regs.HL];
-                        Regs.Place(val < 0, Flags.CARRY);
-                        Regs.Set(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.SBC(Regs.A, Memory[Regs.HL]);
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -759,15 +628,11 @@ namespace GB.emu
                 case 0xAB:
                 case 0xAC:
                 case 0xAD:
-                    Regs.A ^= Regs.GetByte(LowBit - 7);
-                    Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.XOR(Regs.A, Regs.GetByte(LowBit - 7));
                     Cycles = 1;
                     break;
                 case 0xAE:
-                    Regs.A ^= Memory[Regs.HL];
-                    Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.XOR(Regs.A, Memory[Regs.HL]);
                     Cycles = 2;
                     break;
                 #endregion
@@ -779,55 +644,30 @@ namespace GB.emu
                 case 0xBB:
                 case 0xBC:
                 case 0xBD:
-                    Regs.CheckHCarryDec(Regs.A, Regs.GetByte(LowBit - 7)); //TODO: figure out if this is correct
-                    Regs.Place(Regs.A == Regs.GetByte(LowBit - 7), Flags.ZERO);
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Regs.A < Regs.GetByte(LowBit - 7), Flags.CARRY);
+                    Regs.A = (byte)ALU.CP(Regs.A, Regs.GetByte(LowBit - 7));
                     Cycles = 1;
                     break;
                 case 0xBE:
-                    Regs.Place(Regs.A == Memory[Regs.HL], Flags.ZERO);
-                    Regs.Place(Regs.A < Memory[Regs.HL], Flags.CARRY);
+                    Regs.A = (byte)ALU.CP(Regs.A, Memory[Regs.HL]);
                     Cycles = 2;
                     break;
                 #endregion
 
                 #region More A shenanigans
                 case 0x8F:
-                    {
-                        int val = Regs.A;
-                        val += Regs.IsSet(Flags.CARRY) ? 1 : 0;
-                        Regs.CheckHCarry(Regs.A, (byte)val);
-                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY);
-                        Regs.Unset(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 1;
-                    }
+                    Regs.A = (byte)ALU.ADC(Regs.A, Regs.A);
+                    Cycles = 1;
                     break;
                 case 0x9F:
-                    if (Regs.IsSet(Flags.CARRY))
-                    {
-                        Regs.CheckHCarryDec(0, 1);
-                        Regs.A = 0xFF;
-                    }
-                    else
-                    {
-                        Regs.A = 0;
-                        Regs.Unset(Flags.HCARRY | Flags.CARRY);
-                    }
-                    Regs.Set(Flags.SUB);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.SBC(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 case 0xAF:
-                    Regs.A = 0;
-                    Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-                    Regs.Set(Flags.ZERO);
+                    Regs.A = (byte)ALU.XOR(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 case 0xBF:
-                    Regs.Set(Flags.ZERO | Flags.SUB);
-                    Regs.Unset(Flags.HCARRY | Flags.CARRY);
+                    Regs.A = (byte)ALU.CP(Regs.A, Regs.A);
                     Cycles = 1;
                     break;
                 #endregion
@@ -888,7 +728,7 @@ namespace GB.emu
                     if (!Regs.IsSet(Flags.CARRY))
                     {
                         Regs.PC = FetchWord();
-                        Cycles = 4; ;
+                        Cycles = 4;
                     }
                     else
                     {
@@ -951,39 +791,19 @@ namespace GB.emu
 
                 #region ADD|SUB|AND|OR A immediate
                 case 0xC6:
-                    {
-                        Regs.Unset(Flags.SUB);
-                        byte val = Fetch();
-                        Regs.CheckHCarry(Regs.A, val);
-                        Regs.Place(Regs.A + val > byte.MaxValue, Flags.CARRY);
-                        Regs.A += val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.ADDD8D8(Regs.A, Fetch());
+                    Cycles = 2;
                     break;
                 case 0xD6:
-                    {
-                        Regs.Set(Flags.SUB);
-                        int val = Fetch();
-                        Regs.CheckHCarryDec(Regs.A, (byte)val);
-                        Regs.Place(Regs.A - val < 0, Flags.CARRY);
-                        Regs.A -= (byte)val;
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.SUBD8D8(Regs.A, Fetch());
+                    Cycles = 2;
                     break;
                 case 0xE6:
-                    Regs.A &= Fetch();
-                    Regs.Set(Flags.HCARRY);
-
-                    Regs.Unset(Flags.SUB | Flags.CARRY);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.AND(Regs.A, Fetch());
                     Cycles = 2;
                     break;
                 case 0xF6:
-                    Regs.A |= Fetch();
-                    Regs.FlushFlags(0);
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.OR(Regs.A, Fetch());
                     Cycles = 2;
                     break;
                 #endregion
@@ -1031,24 +851,13 @@ namespace GB.emu
                     break;
 
                 case 0xE8:
-                    {
-                        int value = (sbyte)Fetch();
-                        Regs.CheckHCarry(Regs.SP, (ushort)value);
-                        Regs.Place(value > ushort.MaxValue, Flags.CARRY);
-                        Regs.SP += (ushort)value;
-                        Regs.Unset(Flags.ZERO | Flags.SUB);
-                        Cycles = 4;
-                    }
+                    Regs.SP = (ushort)ALU.ADDSP(Regs.SP, (sbyte)Fetch());
+                    Cycles = 4;
                     break;
 
                 case 0xF8:
-                    {
-                        int value = (sbyte)Fetch() + Regs.SP;
-                        Regs.CheckHCarry(Regs.HL, (ushort)value);
-                        Regs.Place(value > ushort.MaxValue, Flags.CARRY);
-                        Regs.HL += (ushort)value;
-                        Cycles = 3;
-                    }
+                    Regs.HL = (ushort)ALU.ADDSP(Regs.SP, (sbyte)Fetch());
+                    Cycles = 3;
                     break;
 
                 case 0xC9:
@@ -1136,42 +945,20 @@ namespace GB.emu
 
                 #region Even more A shenanigans
                 case 0xCE:
-                    {
-                        int value = Fetch() + (Regs.IsSet(Flags.CARRY) ? 1 : 0);
-                        Regs.CheckHCarry(Regs.A, (byte)value);
-                        Regs.Place(value > byte.MaxValue, Flags.CARRY);
-                        Regs.A += (byte)value;
-                        Regs.Unset(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.ADC(Regs.A, Fetch());
+                    Cycles = 2;
                     break;
                 case 0xDE:
-                    {
-                        int value = Fetch() + (Regs.IsSet(Flags.CARRY) ? 1 : 0);
-                        Regs.CheckHCarryDec(Regs.A, (byte)value);
-                        Regs.Place(value < 0, Flags.CARRY);
-                        Regs.A -= (byte)value;
-                        Regs.Set(Flags.SUB);
-                        Regs.Place(Regs.A == 0, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.SBC(Regs.A, Fetch());
+                    Cycles = 2;
                     break;
                 case 0xEE:
-                    Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-                    Regs.A ^= Fetch();
-                    Regs.Place(Regs.A == 0, Flags.ZERO);
+                    Regs.A = (byte)ALU.XOR(Regs.A, Fetch());
                     Cycles = 2;
                     break;
                 case 0xFE:
-                    {
-                        int value = Fetch();
-                        Regs.Set(Flags.SUB);
-                        Regs.CheckHCarryDec(Regs.A, (byte)value);
-                        Regs.Place(Regs.A - value < 0, Flags.CARRY);
-                        Regs.Place(Regs.A == value, Flags.ZERO);
-                        Cycles = 2;
-                    }
+                    Regs.A = (byte)ALU.CP(Regs.A, Fetch());
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -1198,7 +985,6 @@ namespace GB.emu
         {
             uint HighBit = (uint)(opcode >> 4);
             uint LowBit = (uint)(opcode & 0x0F);
-            byte Data;
             int Cycles = 0;
             switch (opcode)
             {
@@ -1210,19 +996,11 @@ namespace GB.emu
                 case 0x04:
                 case 0x05:
                 case 0x07:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.SetByte(LowBit + 1, (byte)((Data << 1) | (Data >> 7)));
-                    Regs.Place((Data & 0b10000000) != 0, Flags.CARRY);
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RLC(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x06:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Memory[Regs.HL] = (byte)((Data << 1) | (Data >> 7));
-                    Regs.Place((Data & 0b10000000) != 0, Flags.CARRY);
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RLC(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1235,35 +1013,11 @@ namespace GB.emu
                 case 0x14:
                 case 0x15:
                 case 0x17:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = (byte)(Regs.GetByte(LowBit + 1) << 1);
-                    if (Regs.IsSet(Flags.CARRY))
-                    {
-                        Data |= 0b00000001;
-                    }
-                    else
-                    {
-                        Data &= 0b11111110;
-                    }
-                    Regs.Place((Data & 0b10000000) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, Data);
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RL(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x16:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = (byte)(Memory[Regs.HL] << 1);
-                    if (Regs.IsSet(Flags.CARRY))
-                    {
-                        Data |= 0b00000001;
-                    }
-                    else
-                    {
-                        Data &= 0b11111110;
-                    }
-                    Regs.Place((Data & 0b10000000) == 1, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)((Data << 1) | (Data >> 7));
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RL(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1276,19 +1030,11 @@ namespace GB.emu
                 case 0x24:
                 case 0x25:
                 case 0x27:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.Place((Data & 0x10000000) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)(Data << 1));
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SLA(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x26:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Regs.Place((Data & 0x10000000) == 1, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)(Data << 1);
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SLA(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1301,17 +1047,11 @@ namespace GB.emu
                 case 0x34:
                 case 0x35:
                 case 0x37:
-                    Data = Regs.GetByte(LowBit + 1);
-                    Data = (byte)(Data << 4 | Data >> 4);
-                    Regs.SetByte(LowBit + 1, Data);
-                    Regs.Place(Data == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SWAP(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x36:
-                    Data = Memory[Regs.HL];
-                    Data = (byte)(Data << 4 | Data >> 4);
-                    Memory[Regs.HL] = Data;
-                    Regs.Place(Data == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SWAP(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1324,19 +1064,11 @@ namespace GB.emu
                 case 0x0C:
                 case 0x0D:
                 case 0x0F:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.Place((Data & 0b00000001) != 0, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)((Data >> 1) | (Data << 7)));
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RRC(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x0E:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Regs.Place((Data & 0b00000001) != 0, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)((Data >> 1) | (Data << 7));
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RRC(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1349,35 +1081,11 @@ namespace GB.emu
                 case 0x1C:
                 case 0x1D:
                 case 0x1F:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = (byte)(Regs.GetByte(LowBit + 1) >> 1);
-                    if (Regs.IsSet(Flags.CARRY))
-                    {
-                        Data |= 0b10000000;
-                    }
-                    else
-                    {
-                        Data &= 0b01111111;
-                    }
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)((Data >> 1) | (Data << 7)));
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RR(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x1E:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = (byte)(Memory[Regs.HL] >> 1);
-                    if (Regs.IsSet(Flags.CARRY))
-                    {
-                        Data |= 0b10000000;
-                    }
-                    else
-                    {
-                        Data &= 0b01111111;
-                    }
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)((Data >> 1) | (Data << 7));
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.RR(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1390,19 +1098,11 @@ namespace GB.emu
                 case 0x2C:
                 case 0x2D:
                 case 0x2F:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)(Data >> 1));
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SRA(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x2E:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)(Data >> 1);
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SRA(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
@@ -1415,24 +1115,16 @@ namespace GB.emu
                 case 0x3C:
                 case 0x3D:
                 case 0x3F:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Regs.GetByte(LowBit + 1);
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Regs.SetByte(LowBit + 1, (byte)((Data >> 1) & 0b01111111));
-                    Regs.Place(Regs.GetByte(LowBit + 1) == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SRL(Regs.GetByte(LowBit + 1)));
                     Cycles = 2;
                     break;
                 case 0x3E:
-                    Regs.Unset(Flags.SUB | Flags.HCARRY);
-                    Data = Memory[Regs.HL];
-                    Regs.Place((Data & 0x00000001) == 1, Flags.CARRY);
-                    Memory[Regs.HL] = (byte)((Data >> 1) & 0b01111111);
-                    Regs.Place(Memory[Regs.HL] == 0, Flags.ZERO);
+                    Regs.SetByte(LowBit + 1, ALU.SRL(Memory[Regs.HL]));
                     Cycles = 4;
                     break;
                 #endregion
 
-                #region Bit Set
+                #region BIT
                 case 0x40:
                 case 0x41:
                 case 0x42:
@@ -1461,13 +1153,8 @@ namespace GB.emu
                 case 0x74:
                 case 0x75:
                 case 0x77:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit + 1) & (1 << (((int)HighBit - 4) * 2)));
-                        Regs.Place(Data != 0, Flags.ZERO);
-                        Regs.Set(Flags.HCARRY);
-                        Regs.Unset(Flags.SUB);
-                        Cycles = 2;
-                    }
+                    ALU.BIT(Regs.GetByte(LowBit + 1), ((int)HighBit - 4) * 2);
+                    Cycles = 2;
                     break;
 
                 case 0x48:
@@ -1498,39 +1185,24 @@ namespace GB.emu
                 case 0x7C:
                 case 0x7D:
                 case 0x7F:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit - 7) & (1 << (((int)HighBit - 4) * 2 + 1)));
-                        Regs.Place(Data != 0, Flags.ZERO);
-                        Regs.Set(Flags.HCARRY);
-                        Regs.Unset(Flags.SUB);
-                        Cycles = 2;
-                    }
+                    ALU.BIT(Regs.GetByte(LowBit - 7), ((int)HighBit - 4) * 2 + 1);
+                    Cycles = 2;
                     break;
 
                 case 0x46:
                 case 0x56:
                 case 0x66:
                 case 0x76:
-                    {
-                        Data = (byte)(Memory[Regs.HL] & (1 << (((int)HighBit - 4) * 2)));
-                        Regs.Place(Data != 0, Flags.ZERO);
-                        Regs.Set(Flags.HCARRY);
-                        Regs.Unset(Flags.SUB);
-                        Cycles = 3;
-                    }
+                    ALU.BIT(Memory[Regs.HL], ((int)HighBit - 4) * 2);
+                    Cycles = 3;
                     break;
 
                 case 0x4E:
                 case 0x5E:
                 case 0x6E:
                 case 0x7E:
-                    {
-                        Data = (byte)(Memory[Regs.HL] & (1 << (((int)HighBit - 4) * 2 + 1)));
-                        Regs.Place(Data != 0, Flags.ZERO);
-                        Regs.Set(Flags.HCARRY);
-                        Regs.Unset(Flags.SUB);
-                        Cycles = 3;
-                    }
+                    ALU.BIT(Memory[Regs.HL], ((int)HighBit - 4) * 2 + 1);
+                    Cycles = 3;
                     break;
                 #endregion
 
@@ -1563,21 +1235,15 @@ namespace GB.emu
                 case 0xB4:
                 case 0xB5:
                 case 0xB7:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit + 1) & ~(1 << (((int)HighBit - 8) * 2)));
-                        Regs.SetByte(LowBit + 1, Data);
-                        Cycles = 2;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.RES(Regs.GetByte(LowBit + 1), ((int)HighBit - 8) * 2));
+                    Cycles = 2;
                     break;
                 case 0x86:
                 case 0x96:
                 case 0xA6:
                 case 0xB6:
-                    {
-                        Data = (byte)(Memory[Regs.HL] & ~(1 << (((int)HighBit - 8) * 2)));
-                        Memory[Regs.HL] = Data;
-                        Cycles = 4;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.RES(Memory[Regs.HL], ((int)HighBit - 8) * 2));
+                    Cycles = 4;
                     break;
 
                 case 0x88:
@@ -1608,21 +1274,15 @@ namespace GB.emu
                 case 0xBC:
                 case 0xBD:
                 case 0xBF:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit + 1) & ~(1 << (((int)HighBit - 8) * 2 + 1)));
-                        Regs.SetByte(LowBit + 1, Data);
-                        Cycles = 2;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 8) * 2 + 1));
+                    Cycles = 2;
                     break;
                 case 0x8E:
                 case 0x9E:
                 case 0xAE:
                 case 0xBE:
-                    {
-                        Data = (byte)(Memory[Regs.HL] & ~(1 << (((int)HighBit - 8) * 2 + 1)));
-                        Memory[Regs.HL] = Data;
-                        Cycles = 4;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 8) * 2 + 1));
+                    Cycles = 2;
                     break;
                 #endregion
 
@@ -1655,21 +1315,15 @@ namespace GB.emu
                 case 0xF4:
                 case 0xF5:
                 case 0xF7:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit + 1) | (1 << (((int)HighBit - 8) * 2)));
-                        Regs.SetByte(LowBit + 1, Data);
-                        Cycles = 2;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit + 1), ((int)HighBit - 0xC) * 2));
+                    Cycles = 2;
                     break;
                 case 0xC6:
                 case 0xD6:
                 case 0xE6:
                 case 0xF6:
-                    {
-                        Data = (byte)(Memory[Regs.HL] | (1 << (((int)HighBit - 8) * 2)));
-                        Memory[Regs.HL] = Data;
-                        Cycles = 4;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2));
+                    Cycles = 4;
                     break;
 
                 case 0xC8:
@@ -1700,21 +1354,15 @@ namespace GB.emu
                 case 0xFC:
                 case 0xFD:
                 case 0xFF:
-                    {
-                        Data = (byte)(Regs.GetByte(LowBit + 1) | (1 << (((int)HighBit - 8) * 2 + 1)));
-                        Regs.SetByte(LowBit + 1, Data);
-                        Cycles = 2;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 0xC) * 2 + 1));
+                    Cycles = 2;
                     break;
                 case 0xCE:
                 case 0xDE:
                 case 0xEE:
                 case 0xFE:
-                    {
-                        Data = (byte)(Memory[Regs.HL] | (1 << (((int)HighBit - 8) * 2 + 1)));
-                        Memory[Regs.HL] = Data;
-                        Cycles = 4;
-                    }
+                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2 + 1));
+                    Cycles = 2;
                     break;
                     #endregion
             }
@@ -1784,6 +1432,7 @@ namespace GB.emu
                     Regs.PC = 0x50;
                     break;
                 case InterruptType.SERIAL:
+                    Memory.ReceiveSerialByte?.Invoke(Memory[Memory.SERIALDATA]);
                     Regs.PC = 0x58;
                     break;
                 case InterruptType.JOYPAD:

@@ -123,7 +123,7 @@ namespace GB.emu
         public int CCF(int arg)
         {
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            Regs.Invert(Flags.CARRY);
+            Regs.Flip(Flags.CARRY);
             return arg;
         }
 

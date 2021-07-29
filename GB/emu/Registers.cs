@@ -102,8 +102,9 @@ namespace GB.emu
             return (byte)regs[index];
         }
 
-        public void SetHigh(uint index, byte value)
+        public void SetHigh(uint index, int value)
         {
+            value &= 0xFF;
             regs[index] = (ushort)((value << 8) | (regs[index] & 0xFF));
         }
 
@@ -112,7 +113,7 @@ namespace GB.emu
             regs[index] = (ushort)(value | (regs[index] & 0xFF00));
         }
 
-        public byte GetByte(uint index)
+        public int GetByte(uint index)
         {
             switch (index)
             {
@@ -136,34 +137,32 @@ namespace GB.emu
             }
         }
 
-        public void SetByte(uint index, byte value)
+        public void SetByte(uint index, int value)
         {
             switch (index)
             {
                 default:
+                case 8:
                 case 0:
-                    A = value;
+                    A = (byte)(value & 0xFF);
                     break;
                 case 1:
-                    B = value;
+                    B = (byte)(value & 0xFF);
                     break;
                 case 2:
-                    C = value;
+                    C = (byte)(value & 0xFF);
                     break;
                 case 3:
-                    D = value;
+                    D = (byte)(value & 0xFF);
                     break;
                 case 4:
-                    E = value;
+                    E = (byte)(value & 0xFF);
                     break;
                 case 5:
-                    H = value;
+                    H = (byte)(value & 0xFF);
                     break;
                 case 6:
-                    L = value;
-                    break;
-                case 8:
-                    A = value;
+                    L = (byte)(value & 0xFF);
                     break;
             }
         }
@@ -208,7 +207,7 @@ namespace GB.emu
             return (Flags & flag) == flag;
         }
 
-        public void Invert(Flags flags)
+        public void Flip(Flags flags)
         {
             Flags = (Flags & ~flags) | (~Flags & flags);
         }
