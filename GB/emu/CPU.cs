@@ -29,6 +29,7 @@ namespace GB.emu
         public Rom Rom;
         public Display LCD;
         public Input Input;
+        public ALU ALU;
 
         protected CPUMode CPUMode = CPUMode.NORMAL;
         protected int Cycles = 0;
@@ -42,6 +43,7 @@ namespace GB.emu
             Memory = new Memory(rom);
             LCD = new Display(Memory);
             Input = new Input(Memory);
+            ALU = new ALU(Regs);
 
             //skip starting sequence and jump straight to cartridge start
             Regs.PC = 0x100;

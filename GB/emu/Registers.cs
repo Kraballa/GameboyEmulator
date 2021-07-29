@@ -208,6 +208,11 @@ namespace GB.emu
             return (Flags & flag) == flag;
         }
 
+        public void Invert(Flags flags)
+        {
+            Flags = (Flags & ~flags) | (~Flags & flags);
+        }
+
         public bool CheckHCarry(byte a, byte b)
         {
             byte result = (byte)(a + b);
