@@ -12,7 +12,14 @@ namespace GB
 
         public static void Initialize(GraphicsDevice gd)
         {
-            ScreenBuffer = new RenderTarget2D(gd, Config.ScreenWidth, Config.ScreenHeight);
+            if (Config.RenderDebugTiles)
+            {
+                ScreenBuffer = new RenderTarget2D(gd, Config.ScreenWidth + 256, 256);
+            }
+            else
+            {
+                ScreenBuffer = new RenderTarget2D(gd, Config.ScreenWidth, Config.ScreenHeight);
+            }
         }
     }
 }

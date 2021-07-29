@@ -266,7 +266,7 @@ namespace GB.emu
             Render.Point(new Vector2(pixelX, pixelY), color);
         }
 
-        public void RenderDebugTiles(int x, int y)
+        public void RenderDebugTiles()
         {
             for (int i = 0; i < 192; i++)
             {
@@ -275,7 +275,7 @@ namespace GB.emu
                 {
                     data[j] = Memory[(ushort)(i + j + 0x8000)];
                 }
-                RenderDebugTile(i % 8 + x, i / 8 + y, data);
+                RenderDebugTile(i % 8, i / 8, data);
             }
         }
 
@@ -286,9 +286,12 @@ namespace GB.emu
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    int index = (data[y * 2] & (1 << x)) << 1;
-                    index |= data[y * 2 + 1] & (1 << x);
+                    int index = (data[y * 2] & (1 << x)) >> x;
+                    index <<= 1;
+                    index |= (data[y * 2 + 1] & (1 << x)) >> x;
+
                     Color color = DecodeColor(index, 0xFF47);
+                    color = Color.White;
                     Render.Point(new Vector2(tileX * 8 + x, tileY * 8 + y), color);
                 }
             }

@@ -9,5 +9,6 @@ namespace GB
         public const int ScreenWidth = 160;
         public const int ScreenHeight = 144;
         public const int Scale = 3;
+        public const bool RenderDebugTiles = true;
     }
 }
