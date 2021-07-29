@@ -110,7 +110,7 @@ namespace GB.emu
                     Cycles = 1;
                     break;
                 case 0xD9: //RETI
-                    Memory.IMEF = Memory.PrevIMEF;
+                    Memory.IMEF = true;
                     Regs.PC = Memory.Pop();
                     Cycles = 4;
                     break;
@@ -1415,7 +1415,6 @@ namespace GB.emu
         private void DoInterrupt(InterruptType type)
         {
             Console.WriteLine("interrupting: {0}", type);
-            Memory.PrevIMEF = Memory.IMEF;
             Memory.IMEF = false;
             Memory[Memory.IFREG] &= (byte)~(1 << (int)type);
             Memory.Push(Regs.PC);

@@ -60,7 +60,6 @@ namespace GB.emu
         public Dictionary<ushort, Action<byte>> MemoryAccessCallback = new Dictionary<ushort, Action<byte>>();
         public Rom Rom;
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
-        public bool PrevIMEF { get; set; }
 
         public byte[] Mem { get => mem; } //only use for reading VRAM, OAM or Debugging
 
