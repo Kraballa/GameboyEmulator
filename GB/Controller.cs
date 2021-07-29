@@ -16,6 +16,19 @@ namespace GB
         const int NumFrames = 30;
 
         public static Controller Instance;
+
+        public double TargetFPS
+        {
+            get
+            {
+                return TargetElapsedTime.TotalMilliseconds * 1000;
+            }
+            set
+            {
+                TargetElapsedTime = TimeSpan.FromMilliseconds(1000d / value);
+            }
+        }
+
         public CPU CPU;
 
         private GraphicsDeviceManager Graphics;

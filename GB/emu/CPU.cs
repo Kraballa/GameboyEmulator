@@ -30,6 +30,7 @@ namespace GB.emu
         public Display LCD;
         public Input Input;
         public ALU ALU;
+        public Timer Timer;
 
         protected CPUMode CPUMode = CPUMode.NORMAL;
         protected int Cycles = 0;
@@ -44,6 +45,7 @@ namespace GB.emu
             LCD = new Display(Memory);
             Input = new Input(Memory);
             ALU = new ALU(Regs);
+            Timer = new Timer(Memory);
 
             //skip starting sequence and jump straight to cartridge start
             Regs.PC = 0x100;
@@ -59,14 +61,15 @@ namespace GB.emu
 
         public virtual void Step()
         {
-            while (Cycles < 70224)
+            Cycles = 0;
+            while (Cycles < 69905)
             {
                 int cycleDelta = Execute(Fetch()) * 4;
                 Cycles += cycleDelta;
+                Timer.Update(cycleDelta);
                 LCD.UpdateGraphics(cycleDelta);
                 HandleInterrupts();
             }
-            Cycles -= 70224;
         }
 
         protected virtual byte Fetch()
@@ -1431,7 +1434,6 @@ namespace GB.emu
                     Regs.PC = 0x50;
                     break;
                 case InterruptType.SERIAL:
-                    Memory.ReceiveSerialByte?.Invoke(Memory[Memory.SERIALDATA]);
                     Regs.PC = 0x58;
                     break;
                 case InterruptType.JOYPAD:

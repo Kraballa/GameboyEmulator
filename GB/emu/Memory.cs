@@ -77,17 +77,28 @@ namespace GB.emu
             }
             set
             {
-                mem[index] = value;
-                if (index == Display.DMA)
-                    OamDmaTransfer(value);
-                if (index == SERIALTC)
+                switch (index)
                 {
-                    if ((Mem[SERIALTC] & (byte)SerialControl.TRANSFER_START) > 0)
-                    {
-                        ReceiveSerialByte?.Invoke(this[SERIALDATA]);
-                        Mem[SERIALTC] &= 0b01111111;
-                        CPU.Instance.RequestInterrupt(InterruptType.SERIAL);
-                    }
+                    default:
+                        mem[index] = value;
+                        break;
+                    case Timer.TAC:
+                        mem[Timer.TAC] = value;
+                        CPU.Instance.Timer.SetClockFreq();
+                        break;
+                    case Timer.DIV:
+                        mem[index] = 0; return;
+                    case Display.DMA:
+                        OamDmaTransfer(value);
+                        break;
+                    case SERIALTC:
+                        if ((Mem[SERIALTC] & (byte)SerialControl.TRANSFER_START) > 0)
+                        {
+                            ReceiveSerialByte?.Invoke(this[SERIALDATA]);
+                            Mem[SERIALTC] &= 0b01111111;
+                            CPU.Instance.RequestInterrupt(InterruptType.SERIAL);
+                        }
+                        break;
                 }
             }
         }
