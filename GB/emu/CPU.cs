@@ -1400,15 +1400,13 @@ namespace GB.emu
         {
             if (Memory.IMEF)
             {
-                byte req = Memory[Memory.IFREG];
-                byte enabled = Memory[Memory.IEREG];
-                if (req > 0)
+                if (Memory[Memory.IFREG] > 0)
                 {
                     for (int i = 0; i < 5; i++)
                     {
-                        if ((req & (1 << i)) != 0 && (enabled & (1 << i)) != 0)
+                        if ((Memory[Memory.IFREG] & Memory[Memory.IEREG] & (1 << i)) != 0)
                         {
-                            DoInterrupt((InterruptType)i);
+                            DoInterrupt((InterruptType)(1 << i));
                         }
                     }
                 }
