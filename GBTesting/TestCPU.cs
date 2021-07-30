@@ -55,6 +55,7 @@ namespace GBTesting
             while (CPUMode == CPUMode.NORMAL)
             {
                 Execute(Fetch());
+                Console.ReadKey();
             }
             return this;
         }
@@ -84,13 +85,13 @@ namespace GBTesting
             {
                 opcode = Fetch();
                 if (ReportOpcodes)
-                    Console.Write("opcode [16bit]: 0x{0:X}\t{1}", opcode | 0xCB00, FlagsToString());
+                    Console.Write("opcode [16bit]: 0x{0:X}\t{1} - PC: {2:X}", opcode | 0xCB00, FlagsToString(), Regs.PC - 1);
                 return base.Execute16Bit(opcode);
             }
             else
             {
                 if (ReportOpcodes)
-                    Console.WriteLine("opcode  [8bit]: 0x{0:X}\t{1}", opcode, FlagsToString());
+                    Console.WriteLine("opcode  [8bit]: 0x{0:X}\t{1} - PC: {2:X}", opcode, FlagsToString(), Regs.PC - 1);
                 return base.Execute(opcode);
             }
         }

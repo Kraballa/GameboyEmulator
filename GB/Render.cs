@@ -389,7 +389,7 @@ namespace GB
 
         public static void Begin(Effect effect = null)
         {
-            SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, effect);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, effect);
         }
 
         public static void End()
