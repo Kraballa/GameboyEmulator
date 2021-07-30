@@ -402,6 +402,7 @@ namespace GB.emu
 
         private void SetNewMode(byte mode)
         {
+            mode &= 0x03;
             Memory[LCDS] &= 0b11111100;
             Memory[LCDS] |= mode;
         }
