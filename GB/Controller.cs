@@ -113,20 +113,21 @@ namespace GB
         {
             if (Config.RenderDebugTiles)
             {
-                GraphicsDevice.SetRenderTarget(null);
+                GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
                 Render.Begin();
+                Render.HollowRect(0, 0, Config.ScreenWidth, Config.ScreenHeight, Palette.White);
+                Render.HollowRect(Config.ScreenWidth, 0, 256, 256, Palette.White);
+
                 CPU.LCD.RenderDebugTiles();
                 Render.End();
             }
 
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(Color.Black);
-
             Render.Begin();
             Render.SpriteBatch.Draw(RenderTargets.ScreenBuffer, Vector2.Zero, null, Color.White, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, 0);
             Render.End();
             base.Draw(gameTime);
-            GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
         }
     }
 }

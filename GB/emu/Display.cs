@@ -144,12 +144,12 @@ namespace GB.emu
 
         private void RenderScanline()
         {
-            //Controller.Instance.GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
+            Controller.Instance.GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
             Render.Begin();
             Memory[LCDC] = 0xFF;
             if ((Memory[LCDC] & (byte)LCDCReg.BGDisplayEnable) != 0)
             {
-                RenderTiles();
+                RenderTilesScanline();
             }
 
             if ((Memory[LCDC] & (byte)LCDCReg.OBJDisplayEnable) != 0)
@@ -159,7 +159,7 @@ namespace GB.emu
             Render.End();
         }
 
-        private void RenderTiles()
+        private void RenderTilesScanline()
         {
             ushort tileData;
             ushort backgroundMemory;
@@ -248,11 +248,11 @@ namespace GB.emu
                 byte data1 = Memory[(ushort)(tileLocation + line)];
                 byte data2 = Memory[(ushort)(tileLocation + line + 1)];
 
-                RenderTile(xPos, pixelX, pixelY, data1, data2);
+                RenderTileScanline(xPos, pixelX, pixelY, data1, data2);
             }
         }
 
-        private void RenderTile(byte xPos, int pixelX, int pixelY, byte data1, byte data2)
+        private void RenderTileScanline(byte xPos, int pixelX, int pixelY, byte data1, byte data2)
         {
             int colourBit = xPos % 8;
             colourBit -= 7;
@@ -262,7 +262,6 @@ namespace GB.emu
             colourNum <<= 1;
             colourNum |= (data1 & (1 << colourBit)) >> colourBit;
             Color color = DecodeColor(colourNum, 0xFF47);
-
             Render.Point(new Vector2(pixelX, pixelY), color);
         }
 
@@ -273,9 +272,9 @@ namespace GB.emu
                 byte[] data = new byte[16];
                 for (int j = 0; j < 16; j++)
                 {
-                    data[j] = Memory[(ushort)(i + j + 0x8000)];
+                    data[j] = Memory[(ushort)(i * 16 + j + 0x8000)];
                 }
-                RenderDebugTile(i % 8, i / 8, data);
+                RenderDebugTile(i % 8 + Config.ScreenWidth / 8, i / 8, data);
             }
         }
 
@@ -289,9 +288,8 @@ namespace GB.emu
                     int index = (data[y * 2] & (1 << x)) >> x;
                     index <<= 1;
                     index |= (data[y * 2 + 1] & (1 << x)) >> x;
-
+                    Memory[0xFF47] = 0b00100111;
                     Color color = DecodeColor(index, 0xFF47);
-                    color = Color.White;
                     Render.Point(new Vector2(tileX * 8 + x, tileY * 8 + y), color);
                 }
             }
@@ -383,15 +381,15 @@ namespace GB.emu
                 case 3: hi = 7; lo = 6; break;
             }
 
-            int color;
-            color = (palette & (1 << hi)) >> hi;
+            byte color;
+            color = (byte)((palette & (1 << hi)) >> hi);
             color <<= 1;
-            color |= (palette & (1 << lo)) >> lo;
+            color |= (byte)((palette & (1 << lo)) >> lo);
 
             return ColorFromIndex(color);
         }
 
-        private Color ColorFromIndex(int color)
+        private Color ColorFromIndex(byte color)
         {
             switch (color)
             {
