@@ -39,7 +39,6 @@ This is an overview on what's been implemented and what's still left:
 - [x] testing pipeline. a modified cpu can be injected with opcodes to test flags and registers
 - [x] fully implement all opcodes
 
-- [ ] FIX HALF-CARRY. I misunderstood what it purpose was...
 - [ ] render tilemaps and sprite sheets for debugging purposes
 - [ ] rendering results vissible on screen (currently there's nothing visible on screen yet...)
 - [ ] make sure timings and interrupts work properly...
