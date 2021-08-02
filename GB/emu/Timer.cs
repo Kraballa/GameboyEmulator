@@ -27,7 +27,7 @@ namespace GB.emu
         // Increments per second, in Hz
         private int ClockFrequency { get; set; }
 
-        private int ClockThreshold(int hz) => (60 * CPU.CyclesPerFrame) / hz;
+        private int ClockThreshold(int hz) => (Controller.Instance.TargetFPS * CPU.CyclesPerFrame) / hz;
 
         public Timer()
         {
