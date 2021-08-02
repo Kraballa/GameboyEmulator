@@ -17,11 +17,11 @@ namespace GB
 
         public static Controller Instance;
 
-        public double TargetFPS
+        public int TargetFPS
         {
             get
             {
-                return TargetElapsedTime.TotalMilliseconds * 1000;
+                return (int)Math.Round(TargetElapsedTime.TotalMilliseconds * 1000);
             }
             set
             {

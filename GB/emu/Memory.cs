@@ -89,6 +89,7 @@ namespace GB.emu
                     case Timer.DIV:
                         mem[index] = 0; return;
                     case Display.DMA:
+                        mem[index] = value;
                         OamDmaTransfer(value);
                         break;
                     case SERIALTC:

@@ -17,34 +17,40 @@ namespace GB.emu
         public const ushort TMA = 0xFF06;
         public const ushort TAC = 0xFF07;
 
-        private Memory Memory { get; set; }
+        private const int DivThreshold = 16384;
 
-        private int TimerCounter { get; set; }
+        private Memory Memory { get; set; }
+        // count up cycles
+        private int CycleCounter { get; set; }
+        // div 
+        private int DivCounter { get; set; }
+        // Increments per second, in Hz
+        private int ClockFrequency { get; set; }
+
+        private int ClockThreshold(int hz) => (60 * CPU.CyclesPerFrame) / hz;
 
         public Timer()
         {
             Memory = CPU.Instance.Memory;
+            SetClockFreq();
         }
 
         public void Update(int cycles)
         {
-            UpdateDividerRegister(cycles);
-            if ((Memory[TAC] & (byte)TACReg.TIMERSTOP) > 0)
+            if ((Memory[TAC] | (byte)TACReg.TIMERSTOP) > 0)
             {
-                TimerCounter -= cycles;
-                if (TimerCounter <= 0)
+                CycleCounter += cycles;
+                DivCounter += cycles;
+                if (CycleCounter > ClockThreshold(ClockFrequency))
                 {
-                    SetClockFreq();
+                    CycleCounter -= ClockThreshold(ClockFrequency);
+                    IncrementTIMA();
+                }
 
-                    if (Memory[TIMA] == 255)
-                    {
-                        Memory[TIMA] = Memory[TMA];
-                        CPU.Instance.RequestInterrupt(InterruptType.TIMER);
-                    }
-                    else
-                    {
-                        Memory[TIMA]++;
-                    }
+                if (DivCounter > ClockThreshold(DivThreshold))
+                {
+                    DivCounter -= ClockThreshold(DivThreshold);
+                    IncrementDIV();
                 }
             }
         }
@@ -53,16 +59,26 @@ namespace GB.emu
         {
             switch (Memory[TAC] & (byte)TACReg.CLOCKSEL)
             {
-                case 0: TimerCounter = 1024; break;
-                case 1: TimerCounter = 16; break;
-                case 2: TimerCounter = 64; break;
-                case 3: TimerCounter = 256; break;
+                case 0: ClockFrequency = 4096; break;
+                case 1: ClockFrequency = 262144; break;
+                case 2: ClockFrequency = 65536; break;
+                case 3: ClockFrequency = 16384; break;
             }
         }
 
-        private void UpdateDividerRegister(int cycles)
+        private void IncrementTIMA()
         {
-            Memory.Mem[DIV] += (byte)cycles;
+            Memory[TIMA]++;
+            if (Memory[TIMA] == 0)
+            {
+                Memory[TIMA] = Memory[TMA];
+                CPU.Instance.RequestInterrupt(InterruptType.TIMER);
+            }
+        }
+
+        private void IncrementDIV()
+        {
+            Memory[DIV]++;
         }
     }
 }

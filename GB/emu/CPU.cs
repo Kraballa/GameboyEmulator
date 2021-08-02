@@ -20,6 +20,8 @@ namespace GB.emu
 
     public class CPU
     {
+        public const int CyclesPerFrame = 69905;
+
         public static CPU Instance;
 
         public OCErrorMode OCErrorMode = OCErrorMode.ERROR;
@@ -61,8 +63,7 @@ namespace GB.emu
 
         public virtual void Step()
         {
-            Cycles = 0;
-            while (Cycles < 69905)
+            while (Cycles < CyclesPerFrame)
             {
                 int cycleDelta = Execute(Fetch()) * 4;
                 Cycles += cycleDelta;
@@ -70,6 +71,7 @@ namespace GB.emu
                 LCD.UpdateGraphics(cycleDelta);
                 HandleInterrupts();
             }
+            Cycles -= CyclesPerFrame;
         }
 
         protected virtual byte Fetch()
@@ -1393,6 +1395,7 @@ namespace GB.emu
 
         public void RequestInterrupt(InterruptType type)
         {
+            Console.WriteLine("requesting interrupt: {0}", type);
             Memory[Memory.IFREG] |= (byte)type;
         }
 
