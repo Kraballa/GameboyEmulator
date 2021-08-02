@@ -1420,7 +1420,7 @@ namespace GB.emu
         {
             Console.WriteLine("interrupting: {0}", type);
             Memory.IMEF = false;
-            Memory[Memory.IFREG] &= (byte)~(1 << (int)type);
+            Memory[Memory.IFREG] &= (byte)~type;
             Memory.Push(Regs.PC);
 
             switch (type)
