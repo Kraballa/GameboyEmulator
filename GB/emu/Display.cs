@@ -37,7 +37,6 @@ namespace GB.emu
         public const ushort LYC = 0xFF45;
         public const ushort WY = 0xFF4A; // window y position
         public const ushort WX = 0xFF4B; // window x position - 7
-        public const ushort DMA = 0xFF46; // DMA transfer start address
         public const ushort VRAMBank = 0xFF4F; // select either VRAM Bank 0 or 1
 
         private const int MODE2BOUNDS = 456 - 80;

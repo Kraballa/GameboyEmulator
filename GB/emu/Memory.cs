@@ -53,6 +53,7 @@ namespace GB.emu
         public const ushort IO = 0xFF00;
         public const ushort SERIALDATA = 0xFF01; //8bit data that is being transferred
         public const ushort SERIALTC = 0xFF02; //transfer control register. writing bit 7 = 1 initiates serial transfer
+        public const ushort DMA = 0xFF46;
         public const ushort HiRAM = 0xFF80;
         public const ushort IFREG = 0xFF0F; //Interrupt Request Register
         public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
@@ -88,7 +89,7 @@ namespace GB.emu
                         break;
                     case Timer.DIV:
                         mem[index] = 0; return;
-                    case Display.DMA:
+                    case DMA:
                         mem[index] = value;
                         OamDmaTransfer(value);
                         break;
@@ -133,7 +134,7 @@ namespace GB.emu
         {
             Console.WriteLine("start oam transfer at address 0x{0:X}00", written);
             ushort start = (ushort)(written << 8);
-            for (ushort offset = 0x00; offset < 0x9F; offset++)
+            for (ushort offset = 0x00; offset <= 0x9F; offset++)
             {
                 this[(ushort)(OAM | offset)] = this[(ushort)(start | offset)];
             }
