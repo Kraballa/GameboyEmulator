@@ -48,9 +48,9 @@ namespace GB.emu
         private int ScanlineCounter = 0;
 
 
-        public Display(Memory memory)
+        public Display()
         {
-            Memory = memory;
+            Memory = CPU.Instance.Memory;
         }
 
         public int GetMode()

@@ -9,9 +9,9 @@ namespace GB.emu
     {
         private Memory Memory;
 
-        public Input(Memory memory)
+        public Input()
         {
-            Memory = memory;
+            Memory = CPU.Instance.Memory;
             Memory[Memory.IO] = 0b00001111;
             Memory.MemoryAccessCallback.Add(Memory.IO, GetInputCallback);
         }

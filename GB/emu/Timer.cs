@@ -21,9 +21,9 @@ namespace GB.emu
 
         private int TimerCounter { get; set; }
 
-        public Timer(Memory mem)
+        public Timer()
         {
-            Memory = mem;
+            Memory = CPU.Instance.Memory;
         }
 
         public void Update(int cycles)

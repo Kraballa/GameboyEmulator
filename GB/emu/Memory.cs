@@ -103,9 +103,9 @@ namespace GB.emu
             }
         }
 
-        public Memory(Rom rom)
+        public Memory()
         {
-            Rom = rom;
+            Rom = CPU.Instance.Rom;
         }
 
         public void Push(ushort data)
@@ -130,7 +130,7 @@ namespace GB.emu
         /// </summary>
         private void OamDmaTransfer(byte written)
         {
-            Console.WriteLine("start oam transfer at address 0x{0:X}", written);
+            Console.WriteLine("start oam transfer at address 0x{0:X}00", written);
             ushort start = (ushort)(written << 8);
             for (ushort offset = 0x00; offset < 0x9F; offset++)
             {

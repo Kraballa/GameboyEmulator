@@ -13,9 +13,9 @@ namespace GB.emu
     {
         private Registers Regs { get; set; }
 
-        public ALU(Registers regs)
+        public ALU()
         {
-            Regs = regs;
+            Regs = CPU.Instance.Regs;
         }
 
         public int INCD8(int arg)

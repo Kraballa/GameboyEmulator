@@ -41,11 +41,11 @@ namespace GB.emu
 
             Rom = rom;
             Regs = new Registers();
-            Memory = new Memory(rom);
-            LCD = new Display(Memory);
-            Input = new Input(Memory);
-            ALU = new ALU(Regs);
-            Timer = new Timer(Memory);
+            Memory = new Memory();
+            LCD = new Display();
+            Input = new Input();
+            ALU = new ALU();
+            Timer = new Timer();
 
             //skip starting sequence and jump straight to cartridge start
             Regs.PC = 0x100;
