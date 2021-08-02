@@ -115,8 +115,8 @@ namespace GB
             {
                 GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
                 Render.Begin();
-                Render.HollowRect(0, 0, Config.ScreenWidth, Config.ScreenHeight, Palette.White);
-                Render.HollowRect(Config.ScreenWidth, 0, 256, 256, Palette.White);
+                Render.HollowRect(0, 0, Config.ScreenWidth, Config.ScreenHeight, Color.Red);
+                Render.HollowRect(Config.ScreenWidth, 0, 256, 256, Color.Red);
 
                 CPU.LCD.RenderDebugTiles();
                 Render.End();

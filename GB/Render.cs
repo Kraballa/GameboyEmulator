@@ -30,8 +30,6 @@ namespace GB
             Color[] colors = new Color[1];
             colors[0] = Color.White;
             Pixel.SetData(colors);
-
-            //Font = Controller.Instance.Content.Load<SpriteFont>("font");
         }
 
         public static void Point(Vector2 at, Color color)
