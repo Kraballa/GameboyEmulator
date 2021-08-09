@@ -9,28 +9,9 @@ namespace GBTesting
         {
             Console.WriteLine("emulator testing");
 
-            TestCPU CPU = new TestCPU(new Rom("tetris.gb"));
+            TestCPU CPU = new TestCPU(new Rom("cpu_instrs.gb"), Flags.ZERO);
             CPU.ReportOpcodes = true;
             CPU.Run();
-        }
-
-        private static void PrintUnknownOpcodes()
-        {
-            TestCPU cpu = new TestCPU(Rom.Empty);
-            cpu.OCErrorMode = OCErrorMode.PRINT;
-            cpu.FetchMode = FetchMode.ZERO;
-            cpu.ReportOpcodes = false;
-            Console.WriteLine("missing 8 bit opcodes:");
-            for (int opcode = 0x00; opcode <= 0xFF; opcode++)
-            {
-                cpu.LoadTestData((byte)opcode).Run();
-            }
-
-            Console.WriteLine("missing 16 bit opcodes:");
-            for (int opcode = 0x00; opcode <= 0xFF; opcode++)
-            {
-                cpu.LoadTestData(0xCB, (byte)opcode).Run();
-            }
         }
     }
 }
