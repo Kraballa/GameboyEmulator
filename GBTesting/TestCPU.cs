@@ -23,9 +23,15 @@ namespace GBTesting
         private Queue<byte> TestData = new Queue<byte>();
         private Random Random = new Random();
 
+        public TestCPU(Rom rom, Flags flags) : this(rom)
+        {
+            Regs.FlushFlags(flags);
+        }
+
         public TestCPU(Rom rom) : base(rom)
         {
             OCErrorMode = OCErrorMode.PRINT;
+
         }
 
         /// <summary>
