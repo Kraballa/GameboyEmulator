@@ -759,8 +759,9 @@ namespace GB.emu
                 case 0xC4:
                     if (!Regs.IsSet(Flags.ZERO))
                     {
+                        ushort data = FetchWord();
                         Memory.Push(Regs.PC);
-                        Regs.PC = FetchWord();
+                        Regs.PC = data;
                         Cycles = 6;
                     }
                     else
@@ -772,8 +773,9 @@ namespace GB.emu
                 case 0xD4:
                     if (!Regs.IsSet(Flags.CARRY))
                     {
+                        ushort data = FetchWord();
                         Memory.Push(Regs.PC);
-                        Regs.PC = FetchWord();
+                        Regs.PC = data;
                         Cycles = 6;
                     }
                     else
@@ -921,8 +923,9 @@ namespace GB.emu
                 case 0xCC:
                     if (Regs.IsSet(Flags.ZERO))
                     {
+                        ushort data = FetchWord();
                         Memory.Push(Regs.PC);
-                        Regs.PC = FetchWord();
+                        Regs.PC = data;
                         Cycles = 6;
                     }
                     else
@@ -934,8 +937,9 @@ namespace GB.emu
                 case 0xDC:
                     if (Regs.IsSet(Flags.CARRY))
                     {
+                        ushort data = FetchWord();
                         Memory.Push(Regs.PC);
-                        Regs.PC = FetchWord();
+                        Regs.PC = data;
                         Cycles = 6;
                     }
                     else
@@ -945,9 +949,12 @@ namespace GB.emu
                     }
                     break;
                 case 0xCD:
-                    Memory.Push(Regs.PC);
-                    Regs.PC = FetchWord();
-                    Cycles = 6;
+                    {
+                        ushort data = FetchWord();
+                        Memory.Push(Regs.PC);
+                        Regs.PC = data;
+                        Cycles = 6;
+                    }
                     break;
                 #endregion
 

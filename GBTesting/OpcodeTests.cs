@@ -12,6 +12,7 @@ namespace GBTesting
             Setup();
         }
 
+        [Setup]
         public void Setup()
         {
             CPU = new TestCPU(Rom.Empty);
@@ -19,11 +20,13 @@ namespace GBTesting
             CPU.OCErrorMode = OCErrorMode.ERROR;
         }
 
+        [Cleanup]
         public void Cleanup()
         {
             CPU = null;
         }
 
+        [Test]
         public void Test8BitLDDEC()
         {
             TestCPU cpu = new TestCPU(Rom.Empty);
@@ -45,6 +48,7 @@ namespace GBTesting
             Assert.IsTrue(cpu.Regs.IsSet(Flags.SUB));
         }
 
+        [Test]
         public void TestRL()
         {
             TestCPU cpu = new TestCPU(Rom.Empty);
