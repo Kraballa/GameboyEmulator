@@ -921,6 +921,7 @@ namespace GB.emu
                 case 0xCC:
                     if (Regs.IsSet(Flags.ZERO))
                     {
+                        Memory.Push(Regs.PC);
                         Regs.PC = FetchWord();
                         Cycles = 6;
                     }
@@ -933,6 +934,7 @@ namespace GB.emu
                 case 0xDC:
                     if (Regs.IsSet(Flags.CARRY))
                     {
+                        Memory.Push(Regs.PC);
                         Regs.PC = FetchWord();
                         Cycles = 6;
                     }
@@ -943,6 +945,7 @@ namespace GB.emu
                     }
                     break;
                 case 0xCD:
+                    Memory.Push(Regs.PC);
                     Regs.PC = FetchWord();
                     Cycles = 6;
                     break;
