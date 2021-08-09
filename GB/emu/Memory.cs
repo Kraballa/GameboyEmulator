@@ -119,16 +119,14 @@ namespace GB.emu
             CPU.Instance.Regs.SP--;
             this[CPU.Instance.Regs.SP] = (byte)(data & 0xFF);
             CPU.Instance.Regs.SP--;
-            Console.WriteLine("push: 0x{0:x}", data);
         }
 
         public ushort Pop()
         {
-            CPU.Instance.Regs.SP--;
-            ushort data = (ushort)(this[CPU.Instance.Regs.SP] << 8);
-            CPU.Instance.Regs.SP--;
-            data |= this[CPU.Instance.Regs.SP];
-            Console.WriteLine("pop: 0x{0:x}", data);
+            CPU.Instance.Regs.SP++;
+            ushort data = this[CPU.Instance.Regs.SP];
+            CPU.Instance.Regs.SP++;
+            data |= (ushort)(this[CPU.Instance.Regs.SP] << 8);
             return data;
         }
 
