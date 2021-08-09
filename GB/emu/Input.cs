@@ -12,16 +12,16 @@ namespace GB.emu
         public Input()
         {
             Memory = CPU.Instance.Memory;
-            Memory[Memory.IO] = 0b00001111;
-            Memory.MemoryAccessCallback.Add(Memory.IO, GetInputCallback);
+            Memory.Mem[Memory.IO] = 0b00001111;
         }
 
-        private void GetInputCallback(byte written)
+        public void GetInputCallback(byte written)
         {
             Console.WriteLine("reading input...");
-            if ((written & 0b100000) != 0) //select button keys
+            byte data = (byte)(0x0F | written);
+            if ((written & 0b100000) == 0) //select button keys
             {
-                byte data = 0b00001111;
+                data = 0b00001111;
                 if (KInput.CheckPressed(Keys.A))
                     data &= 0b11111110;
                 if (KInput.CheckPressed(Keys.B))
@@ -30,11 +30,10 @@ namespace GB.emu
                     data &= 0b11111011;
                 if (KInput.CheckPressed(Keys.Escape)) //select
                     data &= 0b11110111;
-                Memory[Memory.IO] = data;
             }
-            else if ((written & 0b10000) != 0) //select direction keys
+            else if ((written & 0b10000) == 0) //select direction keys
             {
-                byte data = 0b00001111;
+                data = 0b00001111;
                 if (KInput.CheckPressed(Keys.Right))
                     data &= 0b11111110;
                 if (KInput.CheckPressed(Keys.Left))
@@ -43,8 +42,13 @@ namespace GB.emu
                     data &= 0b11111011;
                 if (KInput.CheckPressed(Keys.Down))
                     data &= 0b11110111;
-                Memory[Memory.IO] = data;
             }
+            //one or more input bits changed from high to low
+            if ((Memory.Mem[Memory.IO] & data & 0x0F) < (Memory.Mem[Memory.IO] & 0x0F))
+            {
+                CPU.Instance.RequestInterrupt(InterruptType.JOYPAD);
+            }
+            Memory.Mem[Memory.IO] = data;
         }
     }
 }

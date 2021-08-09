@@ -58,7 +58,6 @@ namespace GB.emu
         public const ushort IFREG = 0xFF0F; //Interrupt Request Register
         public const ushort IEREG = 0xFFFF; //Interrupt Enable Register
 
-        public Dictionary<ushort, Action<byte>> MemoryAccessCallback = new Dictionary<ushort, Action<byte>>();
         public Rom Rom;
         public bool IMEF { get; set; } //Interrupt Master Enable Flag. TODO: figure out where exactly this is located
 
@@ -89,6 +88,10 @@ namespace GB.emu
                         break;
                     case Timer.DIV:
                         mem[index] = 0; return;
+                    case IO:
+                        mem[index] = value;
+                        CPU.Instance.Input.GetInputCallback(value);
+                        break;
                     case DMA:
                         mem[index] = value;
                         OamDmaTransfer(value);
@@ -116,6 +119,7 @@ namespace GB.emu
             CPU.Instance.Regs.SP--;
             this[CPU.Instance.Regs.SP] = (byte)(data & 0xFF);
             CPU.Instance.Regs.SP--;
+            Console.WriteLine("push: 0x{0:x}", data);
         }
 
         public ushort Pop()
@@ -124,6 +128,7 @@ namespace GB.emu
             ushort data = (ushort)(this[CPU.Instance.Regs.SP] << 8);
             CPU.Instance.Regs.SP--;
             data |= this[CPU.Instance.Regs.SP];
+            Console.WriteLine("pop: 0x{0:x}", data);
             return data;
         }
 
@@ -136,7 +141,7 @@ namespace GB.emu
             ushort start = (ushort)(written << 8);
             for (ushort offset = 0x00; offset <= 0x9F; offset++)
             {
-                this[(ushort)(OAM | offset)] = this[(ushort)(start | offset)];
+                Mem[(ushort)(OAM | offset)] = Mem[(ushort)(start | offset)];
             }
         }
 
