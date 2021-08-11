@@ -97,10 +97,10 @@ namespace GB.emu
                         OamDmaTransfer(value);
                         break;
                     case SERIALTC:
-                        if ((Mem[SERIALTC] & (byte)SerialControl.TRANSFER_START) > 0)
+                        if ((this[SERIALTC] & (byte)SerialControl.TRANSFER_START) > 0)
                         {
                             ReceiveSerialByte?.Invoke(this[SERIALDATA]);
-                            Mem[SERIALTC] &= 0b01111111;
+                            this[SERIALTC] &= 0b01111111;
                             CPU.Instance.RequestInterrupt(InterruptType.SERIAL);
                         }
                         break;
@@ -111,6 +111,11 @@ namespace GB.emu
         public Memory()
         {
             Rom = CPU.Instance.Rom;
+
+            for (int i = 0; i < 48; i++)
+            {
+                this[(ushort)(VRAM + i)] = this[(ushort)(0x104 + i)];
+            }
         }
 
         public void Push(ushort data)
@@ -139,7 +144,7 @@ namespace GB.emu
             ushort start = (ushort)(written << 8);
             for (ushort offset = 0x00; offset <= 0x9F; offset++)
             {
-                Mem[(ushort)(OAM | offset)] = Mem[(ushort)(start | offset)];
+                this[(ushort)(OAM | offset)] = this[(ushort)(start | offset)];
             }
         }
 
