@@ -44,7 +44,7 @@ namespace GB.emu
                     data &= 0b11110111;
             }
             //one or more input bits changed from high to low
-            if ((Memory.Mem[Memory.IO] & data & 0x0F) < (Memory.Mem[Memory.IO] & 0x0F))
+            if ((Memory[Memory.IO] & data & 0x0F) < (Memory[Memory.IO] & 0x0F))
             {
                 CPU.Instance.RequestInterrupt(InterruptType.JOYPAD);
             }

@@ -17,17 +17,13 @@ namespace GB.emu
         public const ushort TMA = 0xFF06;
         public const ushort TAC = 0xFF07;
 
-        private const int DivThreshold = 16384;
-
         private Memory Memory { get; set; }
         // count up cycles
-        private int CycleCounter { get; set; }
+        private int TimerCounter { get; set; }
         // div 
         private int DivCounter { get; set; }
         // Increments per second, in Hz
         private int ClockFrequency { get; set; }
-
-        private int ClockThreshold(int hz) => (Controller.Instance.TargetFPS * CPU.CyclesPerFrame) / hz;
 
         public Timer()
         {
@@ -37,20 +33,27 @@ namespace GB.emu
 
         public void Update(int cycles)
         {
-            if ((Memory[TAC] | (byte)TACReg.TIMERSTOP) > 0)
+            DivCounter += cycles;
+            if (DivCounter >= 256)
             {
-                CycleCounter += cycles;
-                DivCounter += cycles;
-                if (CycleCounter > ClockThreshold(ClockFrequency))
-                {
-                    CycleCounter -= ClockThreshold(ClockFrequency);
-                    IncrementTIMA();
-                }
+                DivCounter -= 256;
+                Memory[DIV]++;
+            }
 
-                if (DivCounter > ClockThreshold(DivThreshold))
+            if (((Memory[TAC] >> 2) & 0x1) > 0)
+            {
+                TimerCounter += cycles * 4;
+                SetClockFreq();
+
+                while (TimerCounter >= (CPU.CLOCKS_PER_SECOND / ClockFrequency))
                 {
-                    DivCounter -= ClockThreshold(DivThreshold);
-                    IncrementDIV();
+                    Memory[TIMA]++;
+                    if (Memory[TIMA] == 0)
+                    {
+                        CPU.Instance.RequestInterrupt(InterruptType.TIMER);
+                        Memory[TIMA] = Memory[TMA];
+                    }
+                    TimerCounter -= (CPU.CLOCKS_PER_SECOND / ClockFrequency);
                 }
             }
         }
@@ -64,21 +67,6 @@ namespace GB.emu
                 case 2: ClockFrequency = 65536; break;
                 case 3: ClockFrequency = 16384; break;
             }
-        }
-
-        private void IncrementTIMA()
-        {
-            Memory[TIMA]++;
-            if (Memory[TIMA] == 0)
-            {
-                Memory[TIMA] = Memory[TMA];
-                CPU.Instance.RequestInterrupt(InterruptType.TIMER);
-            }
-        }
-
-        private void IncrementDIV()
-        {
-            Memory[DIV]++;
         }
     }
 }

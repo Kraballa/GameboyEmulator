@@ -39,13 +39,14 @@ namespace GB.emu
         public const ushort WX = 0xFF4B; // window x position - 7
         public const ushort VRAMBank = 0xFF4F; // select either VRAM Bank 0 or 1
 
+        public bool IsVBLANK => Memory[LY] >= 144;
+
         private const int MODE2BOUNDS = 456 - 80;
         private const int MODE3BOUNDS = 456 - 80 - 172;
 
         //need access to memory to write to and read from
         private Memory Memory;
         private int ScanlineCounter = 0;
-
 
         public Display()
         {
@@ -273,7 +274,7 @@ namespace GB.emu
                 {
                     data[j] = Memory[(ushort)(i * 16 + j + 0x8000)];
                 }
-                RenderDebugTile(i % 8 + Config.ScreenWidth / 8, i / 8, data);
+                RenderDebugTile(i % 16 + Config.ScreenWidth / 8, i / 16, data);
             }
         }
 

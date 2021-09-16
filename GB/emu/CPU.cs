@@ -20,7 +20,8 @@ namespace GB.emu
 
     public class CPU
     {
-        public const int CyclesPerFrame = 69905;
+        public const int CLOCKS_PER_SECOND = 4194304;
+        public const int CYCLES_PER_FRAME = 69905;
 
         public static CPU Instance;
 
@@ -63,7 +64,7 @@ namespace GB.emu
 
         public virtual void Step()
         {
-            while (Cycles < CyclesPerFrame)
+            while (Cycles < CYCLES_PER_FRAME)
             {
                 int cycleDelta = Execute(Fetch()) * 4;
                 Cycles += cycleDelta;
@@ -71,7 +72,7 @@ namespace GB.emu
                 LCD.UpdateGraphics(cycleDelta);
                 HandleInterrupts();
             }
-            Cycles -= CyclesPerFrame;
+            Cycles -= CYCLES_PER_FRAME;
         }
 
         protected virtual byte Fetch()
@@ -1457,10 +1458,10 @@ namespace GB.emu
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("flags: ");
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.ZERO) ? "Z" : "-"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.SUB) ? "N" : "-"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.HCARRY) ? "H" : "-"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.CARRY) ? "C" : "-"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.ZERO) ? "Z" : "0"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.SUB) ? "N" : "0"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.HCARRY) ? "H" : "0"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.CARRY) ? "C" : "0"));
             return sb.ToString();
         }
     }

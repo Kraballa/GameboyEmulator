@@ -82,10 +82,6 @@ namespace GB.emu
                     default:
                         mem[index] = value;
                         break;
-                    case Timer.TAC:
-                        mem[Timer.TAC] = value;
-                        CPU.Instance.Timer.SetClockFreq();
-                        break;
                     case Timer.DIV:
                         mem[index] = 0; return;
                     case IO:

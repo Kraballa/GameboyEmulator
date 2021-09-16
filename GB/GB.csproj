@@ -9,4 +9,10 @@
     <ProjectReference Include="..\..\..\..\Documents\Sources\Lib\FNA\FNA.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="data\dmg_boot.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
