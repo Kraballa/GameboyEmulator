@@ -58,10 +58,21 @@ namespace GBTesting
         public TestCPU Run()
         {
             CPUMode = CPUMode.NORMAL;
+            bool waitForPress = false;
+            ReportOpcodes = false;
             while (CPUMode == CPUMode.NORMAL)
             {
+                if (Regs.PC == 0x29A)
+                {
+                    ReportOpcodes = true;
+                    waitForPress = true;
+                }
                 Execute(Fetch());
-                Console.ReadKey();
+                if (waitForPress)
+                {
+                    Console.ReadKey();
+                }
+
             }
             return this;
         }
@@ -91,13 +102,19 @@ namespace GBTesting
             {
                 opcode = Fetch();
                 if (ReportOpcodes)
-                    Console.Write("opcode [16bit]: 0x{0:X}\t{1} - PC: {2:X}", opcode | 0xCB00, FlagsToString(), Regs.PC - 1);
+                {
+                    Console.WriteLine("opcode [16bit]: 0x{0:X}\t{1} - {2}", opcode | 0xCB00, FlagsToString(), Regs);
+                }
+
                 return base.Execute16Bit(opcode);
             }
             else
             {
                 if (ReportOpcodes)
-                    Console.WriteLine("opcode  [8bit]: 0x{0:X}\t{1} - PC: {2:X}", opcode, FlagsToString(), Regs.PC - 1);
+                {
+                    Console.WriteLine("opcode  [8bit]: 0x{0:X}\t{1} - {2}", opcode, FlagsToString(), Regs);
+                }
+
                 return base.Execute(opcode);
             }
         }

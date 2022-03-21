@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace GB.emu
@@ -50,23 +51,38 @@ namespace GB.emu
             ALU = new ALU();
             Timer = new Timer();
 
+            //LoadBootRom();
+
             //skip starting sequence and jump straight to cartridge start
-            Regs.PC = 0x100;
+            Regs.PC = 0x0100;
+
             //set registers to appropriate values
             Regs.AF = 0x01B0;
             Regs.BC = 0x0013;
             Regs.DE = 0x00D8;
             Regs.HL = 0x014D;
             Regs.SP = 0xFFFE;
+            Regs.FlushFlags(Flags.CARRY | Flags.ZERO | Flags.HCARRY);
 
             Memory.ReceiveSerialByte = PrintByte;
+        }
+
+        private void LoadBootRom()
+        {
+            byte[] data = File.ReadAllBytes("data/dmg_boot.bin");
+            for (int i = 0; i < data.Length; i++)
+            {
+                Memory[(ushort)i] = data[i];
+            }
         }
 
         public virtual void Step()
         {
             while (Cycles < CYCLES_PER_FRAME)
             {
-                int cycleDelta = Execute(Fetch()) * 4;
+                byte instr = Fetch();
+                int cycles = Execute(instr);
+                int cycleDelta = cycles * 4;
                 Cycles += cycleDelta;
                 Timer.Update(cycleDelta);
                 LCD.UpdateGraphics(cycleDelta);
@@ -754,6 +770,7 @@ namespace GB.emu
 
                 case 0xC3:
                     Regs.PC = FetchWord();
+                    Console.WriteLine("jumping to {0:X}", Regs.PC);
                     Cycles = 4;
                     break;
 
@@ -973,7 +990,7 @@ namespace GB.emu
                     Cycles = 2;
                     break;
                 case 0xFE:
-                    Regs.A = (byte)ALU.CP(Regs.A, Fetch());
+                    ALU.CP(Regs.A, Fetch());
                     Cycles = 2;
                     break;
                 #endregion
@@ -1334,6 +1351,7 @@ namespace GB.emu
                     Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit + 1), ((int)HighBit - 0xC) * 2));
                     Cycles = 2;
                     break;
+
                 case 0xC6:
                 case 0xD6:
                 case 0xE6:
@@ -1406,7 +1424,7 @@ namespace GB.emu
 
         public void RequestInterrupt(InterruptType type)
         {
-            Console.WriteLine("requesting interrupt: {0}", type);
+            //Console.WriteLine("requesting interrupt: {0}", type);
             Memory[Memory.IFREG] |= (byte)type;
         }
 
@@ -1458,10 +1476,10 @@ namespace GB.emu
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("flags: ");
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.ZERO) ? "Z" : "0"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.SUB) ? "N" : "0"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.HCARRY) ? "H" : "0"));
-            sb.Append(string.Format("{0}", Regs.IsSet(Flags.CARRY) ? "C" : "0"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.ZERO) ? "Z" : "-"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.SUB) ? "N" : "-"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.HCARRY) ? "H" : "-"));
+            sb.Append(string.Format("{0}", Regs.IsSet(Flags.CARRY) ? "C" : "-"));
             return sb.ToString();
         }
     }

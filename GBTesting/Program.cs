@@ -12,7 +12,7 @@ namespace GBTesting
         {
             Console.WriteLine("emulator testing");
 
-            TestCPU CPU = new TestCPU(new Rom("cpu_instrs.gb"), Flags.ZERO);
+            TestCPU CPU = new TestCPU(new Rom("tetris.gb"), Flags.ZERO | Flags.HCARRY | Flags.CARRY);
             CPU.ReportOpcodes = true;
             CPU.Run();
         }

@@ -233,12 +233,12 @@ namespace GB.emu
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format("A: 0x{0:X}", A));
-            sb.AppendLine(string.Format("BC: 0x{0:X}", BC));
-            sb.AppendLine(string.Format("DE: 0x{0:X}", DE));
-            sb.AppendLine(string.Format("HL: 0x{0:X}", HL));
-            sb.AppendLine(string.Format("SP: 0x{0:X}", SP));
-            sb.Append(string.Format("PC: 0x{0:X}", PC));
+            sb.Append(string.Format("[AF: 0x{0:X}, ", AF));
+            sb.Append(string.Format("BC: 0x{0:X}, ", BC));
+            sb.Append(string.Format("DE: 0x{0:X}, ", DE));
+            sb.Append(string.Format("HL: 0x{0:X}, ", HL));
+            sb.Append(string.Format("SP: 0x{0:X}, ", SP));
+            sb.Append(string.Format("PC: 0x{0:X}]", PC - 1));
             return sb.ToString();
         }
     }
