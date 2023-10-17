@@ -274,7 +274,7 @@ namespace GB.emu
                 {
                     data[j] = Memory[(ushort)(i * 16 + j + 0x8000)];
                 }
-                RenderDebugTile(i % 16 + Config.ScreenWidth / 8, i / 16, data);
+                RenderDebugTile(i % 16, i / 16, data);
             }
         }
 
@@ -288,7 +288,7 @@ namespace GB.emu
                     int index = (data[y * 2] & (1 << x)) >> x;
                     index <<= 1;
                     index |= (data[y * 2 + 1] & (1 << x)) >> x;
-                    Memory[0xFF47] = 0b00100111;
+                    //Memory[0xFF47] = 0b00100111;
                     Color color = DecodeColor(index, 0xFF47);
                     Render.Point(new Vector2(tileX * 8 + x, tileY * 8 + y), color);
                 }

@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Documents\Sources\Lib\FNA\FNA.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="data\dmg_boot.bin">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="data\dmg_boot.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Documents\Sources\Lib\FNA\FNA.Core.csproj" />
+		<ProjectReference Include="..\..\..\..\Documents\Sources\Lib\ImGui.NET-1.89.4\src\ImGui.NET\ImGui.NET.csproj" />
+	</ItemGroup>
 
 </Project>

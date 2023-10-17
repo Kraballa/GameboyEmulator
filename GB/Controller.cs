@@ -1,4 +1,5 @@
 ﻿using GB.emu;
+using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,6 +17,8 @@ namespace GB
         const int NumFrames = 30;
 
         public static Controller Instance;
+
+        private ImGuiRenderer Renderer;
 
         public int TargetFPS
         {
@@ -36,17 +39,26 @@ namespace GB
         private int Count = 0;
         private Stopwatch Stopwatch = new Stopwatch();
 
+        private bool CPURun = false;
+        private bool CPUStep = false;
+
+        private IntPtr TextureBufferPtr;
+        private IntPtr ScreenBufferPtr;
+
         public Controller() : base()
         {
             Instance = this;
             IsMouseVisible = true;
             Graphics = new GraphicsDeviceManager(this);
+            Graphics.PreferMultiSampling = true;
+            Graphics.PreferredBackBufferWidth = 1280;
+            Graphics.PreferredBackBufferHeight = 900;
+            Graphics.ApplyChanges();
         }
 
         public void LoadRom(Rom rom)
         {
             CPU = new CPU(rom);
-            CPU.OCErrorMode = OCErrorMode.ERROR;
             Title = CPU.Rom.Header.Title;
             Window.Title = Title;
         }
@@ -57,77 +69,106 @@ namespace GB
             LoadRom(rom);
         }
 
-        protected override void Initialize()
+        protected void ImGuiLayout()
         {
-            base.Initialize();
+            ImGui.DockSpaceOverViewport();
+            ImGui.Begin("Main Window");
+            ImGui.Image(ScreenBufferPtr, new System.Numerics.Vector2(Config.ScreenWidth * Config.Scale, Config.ScreenHeight * Config.Scale));
+            ImGui.End();
 
-            Graphics.PreferMultiSampling = true;
             if (Config.RenderDebugTiles)
             {
-                Graphics.PreferredBackBufferWidth = (Config.ScreenWidth + 256) * Config.Scale;
-                Graphics.PreferredBackBufferHeight = 256 * Config.Scale;
+                ImGui.Begin("Texture Buffer");
+                ImGui.Image(TextureBufferPtr, new System.Numerics.Vector2(Config.ScreenWidth * Config.Scale, Config.ScreenHeight * Config.Scale));
+                ImGui.End();
+            }
+
+            ImGui.Begin("Control");
+            ImGui.Checkbox("CPU Run", ref CPURun);
+            if (ImGui.Button("CPU Step")) { CPUStep = true; }
+            ImGui.Text($"regs: {CPU.Regs}");
+            string lastInstr;
+            if (CPU.LastInstrWasCB)
+            {
+                lastInstr = $"CB{CPU.LastInstr:X2}";
             }
             else
             {
-                Graphics.PreferredBackBufferWidth = Config.ScreenWidth * Config.Scale;
-                Graphics.PreferredBackBufferHeight = Config.ScreenHeight * Config.Scale;
+                lastInstr = $"{CPU.LastInstr:X2}";
             }
+            ImGui.Text($"lastInstr: 0x{lastInstr}");
+            ImGui.End();
+        }
 
-            Graphics.ApplyChanges();
-
+        protected override void Initialize()
+        {
+            base.Initialize();
             Render.Initialize(GraphicsDevice);
             KInput.Initialize();
             MInput.Initialize();
             RenderTargets.Initialize(GraphicsDevice);
+
+            Renderer = new ImGuiRenderer(this);
+            Renderer.RebuildFontAtlas();
+            ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+            ImGui.StyleColorsLight();
+
+            ScreenBufferPtr = Renderer.BindTexture(RenderTargets.ScreenBuffer);
+            TextureBufferPtr = Renderer.BindTexture(RenderTargets.TextureBuffer);
         }
 
         protected override void Update(GameTime gameTime)
         {
             MInput.Update();
             KInput.Update();
-            Stopwatch.Start();
-            CPU.Step();
-            Stopwatch.Stop();
-            Count++;
-            if (Count == NumFrames)
-            {
-                float executionTime = Stopwatch.ElapsedMilliseconds / (float)NumFrames / 16.6667f;
-                float speed = 100 / Math.Max(1, executionTime);
 
-                Window.Title = Title + string.Format(" - speed: {0,4}%, exetime: {1,4}%", speed, executionTime * 100);
-                Stopwatch.Reset();
-                Count = 0;
+            if (KInput.CheckPressed(Keys.Space))
+            {
+                CPUStep = true;
             }
 
-            if (KInput.CheckPressed(Keys.F1))
+            if (CPUStep)
             {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine(CPU.FlagsToString() + " - PC: 0x{0:X} [0x{1:X}] - rom: {2}", CPU.Regs.PC, CPU.Memory[CPU.Regs.PC], CPU.Rom.Header.Title);
-                Console.ForegroundColor = ConsoleColor.Gray;
+                CPU.Step();
+                CPUStep = false;
             }
+            else if (CPURun)
+            {
+                Stopwatch.Start();
+                CPU.Frame();
+                Stopwatch.Stop();
 
-            base.Update(gameTime);
+                Count++;
+                if (Count == NumFrames)
+                {
+                    float executionTime = Stopwatch.ElapsedMilliseconds / (float)NumFrames / 16.6667f;
+                    float speed = 100 / Math.Max(1, executionTime);
+
+                    Window.Title = Title + string.Format(" - speed: {0,4}%, exetime: {1,4}%", speed, executionTime * 100);
+                    Stopwatch.Reset();
+                    Count = 0;
+                }
+
+                CPUStep = false;
+            }
         }
 
         protected override void Draw(GameTime gameTime)
         {
+            Renderer.BeforeLayout(gameTime);
+
             if (Config.RenderDebugTiles)
             {
-                GraphicsDevice.SetRenderTarget(RenderTargets.ScreenBuffer);
+                GraphicsDevice.SetRenderTarget(RenderTargets.TextureBuffer);
                 Render.Begin();
-                Render.HollowRect(0, 0, Config.ScreenWidth, Config.ScreenHeight, Color.Red);
-                Render.HollowRect(Config.ScreenWidth, 0, 256, 256, Color.Red);
-
                 CPU.LCD.RenderDebugTiles();
                 Render.End();
             }
-
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Black);
-            Render.Begin();
-            Render.SpriteBatch.Draw(RenderTargets.ScreenBuffer, Vector2.Zero, null, Color.White, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, 0);
-            Render.End();
-            base.Draw(gameTime);
+
+            ImGuiLayout();
+
+            Renderer.AfterLayout();
         }
     }
 }

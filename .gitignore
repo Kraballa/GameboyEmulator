@@ -11,3 +11,5 @@
 /GBTesting/obj
 /GB/bin/Release/netcoreapp3.1
 /GB/data/dmg_boot.bin
+/.vs/ProjectEvaluation
+/GB/bin/Debug/net6.0

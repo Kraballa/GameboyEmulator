@@ -5,13 +5,6 @@ using System.Text;
 
 namespace GB.emu
 {
-    public enum OCErrorMode
-    {
-        ERROR,
-        PRINT,
-        NOTHING
-    }
-
     public enum CPUMode
     {
         NORMAL,
@@ -26,8 +19,6 @@ namespace GB.emu
 
         public static CPU Instance;
 
-        public OCErrorMode OCErrorMode = OCErrorMode.ERROR;
-
         public Registers Regs;
         public Memory Memory;
         public Rom Rom;
@@ -35,6 +26,9 @@ namespace GB.emu
         public Input Input;
         public ALU ALU;
         public Timer Timer;
+
+        public byte LastInstr = 0x00;
+        public bool LastInstrWasCB = false;
 
         protected CPUMode CPUMode = CPUMode.NORMAL;
         protected int Cycles = 0;
@@ -59,7 +53,7 @@ namespace GB.emu
             //set registers to appropriate values
             Regs.AF = 0x01B0;
             Regs.BC = 0x0013;
-            Regs.DE = 0x00D8;
+            Regs.DE = 0x13D8;
             Regs.HL = 0x014D;
             Regs.SP = 0xFFFE;
             Regs.FlushFlags(Flags.CARRY | Flags.ZERO | Flags.HCARRY);
@@ -76,17 +70,45 @@ namespace GB.emu
             }
         }
 
-        public virtual void Step()
+        /// <summary>
+        /// Do a fetch - decode - execute cycle
+        /// </summary>
+        private void InstructionCycle()
+        {
+            byte instr = Fetch();
+            LastInstr = instr;
+            LastInstrWasCB = false;
+            int cycles = Execute(instr) * 4;
+            Cycles += cycles;
+            Timer.Update(cycles);
+            LCD.UpdateGraphics(cycles);
+            HandleInterrupts();
+            //string state = string.Format("A:{0,2:X2} F:{0,2:X2} B:{0,2:X2} C:{0,2:X2} D:{0,2:X2} E:{0,2:X2} H:{0,2:X2} L:{0,2:X2} SP:{0,4:X4} PC:{0,4:X4} PCMEM:{0,2:X2},{0,2:X2},{0,2:X2},{0,2:X2}",
+            //Regs.A, Regs.Flags, Regs.B, Regs.C, Regs.D, Regs.E, Regs.H, Regs.L, Regs.SP, Regs.PC, Memory[Regs.PC], Memory[(ushort)(Regs.PC + 1)], Memory[(ushort)(Regs.PC + 2)], Memory[(ushort)(Regs.PC + 3)]);
+            //Console.WriteLine(state);
+        }
+
+        /// <summary>
+        /// Do an instruction cycle but handle cycle count. Mainly so we can step through instructions for debugging
+        /// </summary>
+        public void Step()
+        {
+            InstructionCycle();
+
+            if (Cycles > CYCLES_PER_FRAME)
+            {
+                Cycles -= CYCLES_PER_FRAME;
+            }
+        }
+
+        /// <summary>
+        /// process a frame
+        /// </summary>
+        public virtual void Frame()
         {
             while (Cycles < CYCLES_PER_FRAME)
             {
-                byte instr = Fetch();
-                int cycles = Execute(instr);
-                int cycleDelta = cycles * 4;
-                Cycles += cycleDelta;
-                Timer.Update(cycleDelta);
-                LCD.UpdateGraphics(cycleDelta);
-                HandleInterrupts();
+                InstructionCycle();
             }
             Cycles -= CYCLES_PER_FRAME;
         }
@@ -718,6 +740,9 @@ namespace GB.emu
                     break;
 
                 case 0xF0:
+                    //ushort loc = (ushort)(Fetch() | 0xFF00);
+                    //ushort loc = Memory[(ushort)(Regs.PC++ | 0xFF)];
+                    //Console.WriteLine($"mem-1: {Memory[(ushort)(loc - 1)]}, mem: {Memory[loc]}, mem+1: {Memory[(ushort)(loc + 1)]}");
                     Regs.A = Memory[(ushort)(Fetch() | 0xFF00)];
                     break;
 
@@ -1016,6 +1041,9 @@ namespace GB.emu
 
         protected virtual int Execute16Bit(byte opcode) //always prefixed with 'CB'
         {
+            LastInstr = opcode;
+            LastInstrWasCB = true;
+
             uint HighBit = (uint)(opcode >> 4);
             uint LowBit = (uint)(opcode & 0x0F);
             int Cycles = 0;
@@ -1410,16 +1438,7 @@ namespace GB.emu
 
         protected void HandleInvalidOpcode(byte opcode)
         {
-            switch (OCErrorMode)
-            {
-                case OCErrorMode.ERROR:
-                    throw new Exception(string.Format("invalid opcode: 0x{0:X}", opcode));
-                case OCErrorMode.PRINT:
-                    Console.WriteLine("invalid opcode: 0x{0:X}", opcode);
-                    break;
-                default:
-                    break;
-            }
+            throw new Exception(string.Format("invalid opcode: 0x{0:X}", opcode));
         }
 
         public void RequestInterrupt(InterruptType type)
@@ -1447,7 +1466,7 @@ namespace GB.emu
 
         private void DoInterrupt(InterruptType type)
         {
-            Console.WriteLine("interrupting: {0}", type);
+            //Console.WriteLine("interrupting: {0}", type);
             Memory.IMEF = false;
             Memory[Memory.IFREG] &= (byte)~type;
             Memory.Push(Regs.PC);
