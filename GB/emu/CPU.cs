@@ -87,7 +87,7 @@ namespace GB.emu
 
         public string GetState()
         {
-            string state = string.Format("A:{0:X2} F:{1:X2} B:{2:X2} C:{3:X2} D:{4:X2} E:{5:X2} H:{6:X2} L:{7:X2} SP:{8:X2} PC:{9:X2} PCMEM:{10:X2},{11:X2},{12:X2},{13:X2}",
+            string state = string.Format("A:{0:X2} F:{1:X2} B:{2:X2} C:{3:X2} D:{4:X2} E:{5:X2} H:{6:X2} L:{7:X2} SP:{8:X2} PC:{9:X4} PCMEM:{10:X2},{11:X2},{12:X2},{13:X2}",
             Regs.A, Regs.F, Regs.B, Regs.C, Regs.D, Regs.E, Regs.H, Regs.L, Regs.SP, Regs.PC, Memory[Regs.PC], Memory[(ushort)(Regs.PC + 1)], Memory[(ushort)(Regs.PC + 2)], Memory[(ushort)(Regs.PC + 3)]);
             return state;
         }

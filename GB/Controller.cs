@@ -33,6 +33,7 @@ namespace GB
         }
 
         public CPU CPU;
+        public Rom Rom;
 
         private GraphicsDeviceManager Graphics;
         private string Title;
@@ -58,6 +59,7 @@ namespace GB
 
         public void LoadRom(Rom rom)
         {
+            Rom = rom;
             CPU = new CPU(rom);
             Title = CPU.Rom.Header.Title;
             Window.Title = Title;
@@ -65,8 +67,8 @@ namespace GB
 
         public void LoadRom(string path)
         {
-            Rom rom = new Rom(path);
-            LoadRom(rom);
+            Rom = new Rom(path);
+            LoadRom(Rom);
         }
 
         protected void ImGuiLayout()
@@ -84,6 +86,7 @@ namespace GB
             }
 
             ImGui.Begin("Control");
+            if (ImGui.Button("Reset")) { LoadRom(Rom); }
             ImGui.Checkbox("CPU Run", ref CPURun);
             if (ImGui.Button("CPU Step")) { CPUStep = true; }
             string lastInstr;
@@ -97,6 +100,19 @@ namespace GB
             }
             ImGui.Text($"lastInstr: 0x{lastInstr}");
             ImGui.Text($"cpu state: {CPU.GetState()}");
+
+            if (ImGui.Button("test log"))
+            {
+                StreamWriter writer = new StreamWriter(File.Create("test.log"));
+                writer.WriteLine(CPU.GetState());
+                for (int i = 0; i < 1000; i++)
+                {
+                    CPU.Step();
+                    writer.WriteLine(CPU.GetState());
+                }
+                writer.Close();
+                Console.WriteLine("wrote log");
+            }
             ImGui.End();
         }
 

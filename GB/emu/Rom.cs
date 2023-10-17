@@ -69,12 +69,6 @@ namespace GB.emu
                     return 0x00;
                 return mem[index];
             }
-            set //only used for debugging
-            {
-                if (index >= mem.Length)
-                    return;
-                mem[index] = value;
-            }
         }
 
         private void ParseCartridgeHeader()
