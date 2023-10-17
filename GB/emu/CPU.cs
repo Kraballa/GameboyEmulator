@@ -53,7 +53,7 @@ namespace GB.emu
             //set registers to appropriate values
             Regs.AF = 0x01B0;
             Regs.BC = 0x0013;
-            Regs.DE = 0x13D8;
+            Regs.DE = 0x00D8;
             Regs.HL = 0x014D;
             Regs.SP = 0xFFFE;
             Regs.FlushFlags(Flags.CARRY | Flags.ZERO | Flags.HCARRY);
@@ -83,9 +83,13 @@ namespace GB.emu
             Timer.Update(cycles);
             LCD.UpdateGraphics(cycles);
             HandleInterrupts();
-            //string state = string.Format("A:{0,2:X2} F:{0,2:X2} B:{0,2:X2} C:{0,2:X2} D:{0,2:X2} E:{0,2:X2} H:{0,2:X2} L:{0,2:X2} SP:{0,4:X4} PC:{0,4:X4} PCMEM:{0,2:X2},{0,2:X2},{0,2:X2},{0,2:X2}",
-            //Regs.A, Regs.Flags, Regs.B, Regs.C, Regs.D, Regs.E, Regs.H, Regs.L, Regs.SP, Regs.PC, Memory[Regs.PC], Memory[(ushort)(Regs.PC + 1)], Memory[(ushort)(Regs.PC + 2)], Memory[(ushort)(Regs.PC + 3)]);
-            //Console.WriteLine(state);
+        }
+
+        public string GetState()
+        {
+            string state = string.Format("A:{0:X2} F:{1:X2} B:{2:X2} C:{3:X2} D:{4:X2} E:{5:X2} H:{6:X2} L:{7:X2} SP:{8:X2} PC:{9:X2} PCMEM:{10:X2},{11:X2},{12:X2},{13:X2}",
+            Regs.A, Regs.F, Regs.B, Regs.C, Regs.D, Regs.E, Regs.H, Regs.L, Regs.SP, Regs.PC, Memory[Regs.PC], Memory[(ushort)(Regs.PC + 1)], Memory[(ushort)(Regs.PC + 2)], Memory[(ushort)(Regs.PC + 3)]);
+            return state;
         }
 
         /// <summary>

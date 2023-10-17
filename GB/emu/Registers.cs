@@ -26,6 +26,12 @@ namespace GB.emu
             set => SetHigh(0, value);
         }
 
+        public byte F
+        {
+            get => GetLow(0);
+            set => SetLow(0, value);
+        }
+
         public ushort BC
         {
             get => regs[1];

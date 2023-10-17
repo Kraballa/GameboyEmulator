@@ -86,7 +86,6 @@ namespace GB
             ImGui.Begin("Control");
             ImGui.Checkbox("CPU Run", ref CPURun);
             if (ImGui.Button("CPU Step")) { CPUStep = true; }
-            ImGui.Text($"regs: {CPU.Regs}");
             string lastInstr;
             if (CPU.LastInstrWasCB)
             {
@@ -97,6 +96,7 @@ namespace GB
                 lastInstr = $"{CPU.LastInstr:X2}";
             }
             ImGui.Text($"lastInstr: 0x{lastInstr}");
+            ImGui.Text($"cpu state: {CPU.GetState()}");
             ImGui.End();
         }
 
