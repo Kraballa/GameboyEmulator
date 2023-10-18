@@ -3,7 +3,7 @@
 ## Introduction
 This is a prototype gameboy emulator in a very early stage. Progress is slow/nonexistent. 
 Built for education first and performance second. 
-As such accuracy or emulationg every part of the console is of no concern currently.
+As such accuracy or emulating every part of the console is of no concern currently.
 
 Graphics are done via the FNA library.
 
@@ -21,12 +21,6 @@ Graphics are done via the FNA library.
 - there are many more resources. will append as I find and use them
 - BGB is accurate so it can to be used for debugging purposes
 
-## Code Conventions
-- any hex ciphers that use letters (i.e. 0xFF, 0xA8) must use the capitalized letter
-- code files relating to emulating the gameboy should be placed under /emu
-- files that contain data that is not code or this readme should be placed in /data
-- lines that are not easily understood may be explained on the same line. keep it as short as possible
-
 ## Progress
 This is an overview on what's been implemented and what's still left:
 
@@ -38,16 +32,14 @@ This is an overview on what's been implemented and what's still left:
 - [x] basic rendering pipeline (implemented, not working yet)
 - [x] testing pipeline. a modified cpu can be injected with opcodes to test flags and registers
 - [x] fully implement all opcodes
-- [x] render tilemaps and sprite sheets for debugging purposes (currently horizontally mirrored and not working fully)
-
-- [ ] rendering results vissible on screen (currently there's nothing visible on screen yet...)
-- [ ] make sure timings and interrupts work properly...
-- [ ] validate execution with tetris
-- [ ] get through blarggs test roms
+- [x] render tilemaps and sprite sheets for debugging purposes
+- [x] use Dear ImGUI for options and other UI 
 - [ ] memory bank switching
-- [ ] use Dear ImGUI for options and other UI 
+- [ ] get through blarggs test roms
+- [ ] rendering results visible on screen (currently there's nothing visible on screen yet...)
+- [ ] make sure timings and interrupts work properly...
+- [ ] play tetris...
 - [ ] sound (out of scope for the near future)
 
 ## Other things to consider
 - replace fixed setting of cycles with dynamically setting it (accessing memory takes 1 cycle per byte, pushing/popping from SP takes 1 cycle per byte, fetching takes 1 byte per fetch)
-- figure out a test framework that works. tried a couple, but seemingly unsolvable issues lead me to think of some custom solution
