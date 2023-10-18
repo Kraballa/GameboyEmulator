@@ -123,7 +123,6 @@ namespace GB.emu
         {
             switch (index)
             {
-                default:
                 case 0:
                     return A;
                 case 1:
@@ -138,9 +137,8 @@ namespace GB.emu
                     return H;
                 case 6:
                     return L;
-                case 8:
-                    return A;
             }
+            throw new Exception("huh");
         }
 
         public void SetByte(uint index, int value)

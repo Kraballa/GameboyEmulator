@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GB.emu.Memory;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

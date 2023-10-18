@@ -66,8 +66,6 @@ namespace GB.emu
             get
             {
                 //TODO: Rom Banks, only allow access to BANK0
-                if (index >= MMU.BANK1)
-                    return 0x00;
                 return mem[index];
             }
         }

@@ -105,7 +105,7 @@ namespace GB
             {
                 StreamWriter writer = new StreamWriter(File.Create("test.log"));
                 writer.WriteLine(CPU.GetState());
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 30000; i++)
                 {
                     CPU.Step();
                     writer.WriteLine(CPU.GetState());

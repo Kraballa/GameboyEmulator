@@ -523,7 +523,7 @@ namespace GB.emu
                 case 0x7B:
                 case 0x7C:
                 case 0x7D:
-                    Regs.A = (byte)Regs.GetByte(LowBit + 1);
+                    Regs.A = (byte)Regs.GetByte(LowBit - 7);
                     Cycles = 1;
                     break;
                 #endregion
@@ -745,9 +745,8 @@ namespace GB.emu
                     break;
 
                 case 0xF0:
-                    //ushort loc = (ushort)(Fetch() | 0xFF00);
-                    //ushort loc = Memory[(ushort)(Regs.PC++ | 0xFF)];
-                    //Console.WriteLine($"mem-1: {Memory[(ushort)(loc - 1)]}, mem: {Memory[loc]}, mem+1: {Memory[(ushort)(loc + 1)]}");
+                    //Console.WriteLine($"pc: {Regs.PC}");
+                    //Console.WriteLine($"0xFF44: {Memory[0xFF44]}");
                     Regs.A = Memory[(ushort)(Fetch() | 0xFF00)];
                     break;
 
