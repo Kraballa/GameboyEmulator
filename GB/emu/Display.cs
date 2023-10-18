@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using GB.emu.Memory;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -45,7 +46,7 @@ namespace GB.emu
         private const int MODE3BOUNDS = 456 - 80 - 172;
 
         //need access to memory to write to and read from
-        private Memory Memory;
+        private MMU Memory;
         private int ScanlineCounter = 0;
 
         public Display()
@@ -180,7 +181,7 @@ namespace GB.emu
 
             if ((Memory[LCDC] & (byte)LCDCReg.WinTileMapDispSel) != 0)
             {
-                tileData = Memory.VRAM;
+                tileData = MMU.VRAM;
             }
             else
             {
@@ -302,10 +303,10 @@ namespace GB.emu
             for (int sprite = 0; sprite < 40; sprite++)
             {
                 byte index = (byte)(sprite * 4);
-                byte sprX = (byte)(Memory[(ushort)(Memory.OAM + index + 1)] - 8);
-                byte sprY = (byte)(Memory[(ushort)(Memory.OAM + index)] - 16);
-                byte tileLocation = Memory[(ushort)(Memory.OAM + index + 2)];
-                byte attributes = Memory[(ushort)(Memory.OAM + index + 3)];
+                byte sprX = (byte)(Memory[(ushort)(MMU.OAM + index + 1)] - 8);
+                byte sprY = (byte)(Memory[(ushort)(MMU.OAM + index)] - 16);
+                byte tileLocation = Memory[(ushort)(MMU.OAM + index + 2)];
+                byte attributes = Memory[(ushort)(MMU.OAM + index + 3)];
 
                 bool xFlip = (attributes & (1 << 5)) != 0;
                 bool yFlip = (attributes & (1 << 6)) != 0;
@@ -323,7 +324,7 @@ namespace GB.emu
                     }
 
                     line *= 2;
-                    ushort memAddress = (ushort)((Memory.VRAM + (tileLocation * 16)) + line);
+                    ushort memAddress = (ushort)((MMU.VRAM + (tileLocation * 16)) + line);
                     byte data1 = Memory[memAddress];
                     byte data2 = Memory[(ushort)(memAddress + 1)];
 

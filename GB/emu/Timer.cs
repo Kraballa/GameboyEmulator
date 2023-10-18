@@ -17,7 +17,7 @@ namespace GB.emu
         public const ushort TMA = 0xFF06;
         public const ushort TAC = 0xFF07;
 
-        private Memory Memory { get; set; }
+        private MMU Memory { get; set; }
         // count up cycles
         private int TimerCounter { get; set; }
         // div 

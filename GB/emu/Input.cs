@@ -7,12 +7,12 @@ namespace GB.emu
 {
     public class Input
     {
-        private Memory Memory;
+        private MMU Memory;
 
         public Input()
         {
             Memory = CPU.Instance.Memory;
-            Memory.Mem[Memory.IO] = 0b00001111;
+            Memory.Mem[MMU.IO] = 0b00001111;
         }
 
         public void GetInputCallback(byte written)
@@ -44,11 +44,11 @@ namespace GB.emu
                     data &= 0b11110111;
             }
             //one or more input bits changed from high to low
-            if ((Memory[Memory.IO] & data & 0x0F) < (Memory[Memory.IO] & 0x0F))
+            if ((Memory[MMU.IO] & data & 0x0F) < (Memory[MMU.IO] & 0x0F))
             {
                 CPU.Instance.RequestInterrupt(InterruptType.JOYPAD);
             }
-            Memory.Mem[Memory.IO] = data;
+            Memory.Mem[MMU.IO] = data;
         }
     }
 }

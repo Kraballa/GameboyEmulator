@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GB.emu.Memory;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -20,7 +21,7 @@ namespace GB.emu
         public static CPU Instance;
 
         public Registers Regs;
-        public Memory Memory;
+        public MMU Memory;
         public Rom Rom;
         public Display LCD;
         public Input Input;
@@ -39,7 +40,7 @@ namespace GB.emu
 
             Rom = rom;
             Regs = new Registers();
-            Memory = new Memory();
+            Memory = new MMU();
             LCD = new Display();
             Input = new Input();
             ALU = new ALU();
@@ -1448,18 +1449,18 @@ namespace GB.emu
         public void RequestInterrupt(InterruptType type)
         {
             //Console.WriteLine("requesting interrupt: {0}", type);
-            Memory[Memory.IFREG] |= (byte)type;
+            Memory[MMU.IFREG] |= (byte)type;
         }
 
         private void HandleInterrupts()
         {
             if (Memory.IMEF)
             {
-                if (Memory[Memory.IFREG] > 0)
+                if (Memory[MMU.IFREG] > 0)
                 {
                     for (int i = 0; i < 5; i++)
                     {
-                        if ((Memory[Memory.IFREG] & Memory[Memory.IEREG] & (1 << i)) != 0)
+                        if ((Memory[MMU.IFREG] & Memory[MMU.IEREG] & (1 << i)) != 0)
                         {
                             DoInterrupt((InterruptType)(1 << i));
                         }
@@ -1472,7 +1473,7 @@ namespace GB.emu
         {
             //Console.WriteLine("interrupting: {0}", type);
             Memory.IMEF = false;
-            Memory[Memory.IFREG] &= (byte)~type;
+            Memory[MMU.IFREG] &= (byte)~type;
             Memory.Push(Regs.PC);
 
             switch (type)

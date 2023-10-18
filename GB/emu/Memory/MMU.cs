@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GB.emu
+namespace GB.emu.Memory
 {
     /// <summary>
     /// Used both for enabling/disabling Interrupts as well as Requests in IEREG and IFREG
@@ -39,7 +39,7 @@ namespace GB.emu
         SHIFT_CLOCK = 0b00000001
     }
 
-    public class Memory
+    public class MMU
     {
         public const ushort BANK0 = 0x0000;
         public const ushort BANK1 = 0x4000;
@@ -104,7 +104,7 @@ namespace GB.emu
             }
         }
 
-        public Memory()
+        public MMU()
         {
             Rom = CPU.Instance.Rom;
 
