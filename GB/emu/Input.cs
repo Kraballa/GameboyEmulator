@@ -18,7 +18,6 @@ namespace GB.emu
 
         public void GetInputCallback(byte written)
         {
-            Console.WriteLine("reading input...");
             byte data = (byte)(0x0F | written);
             if ((written & 0b100000) == 0) //select button keys
             {

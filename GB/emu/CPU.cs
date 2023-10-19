@@ -745,8 +745,6 @@ namespace GB.emu
                     break;
 
                 case 0xF0:
-                    //Console.WriteLine($"pc: {Regs.PC}");
-                    //Console.WriteLine($"0xFF44: {Memory[0xFF44]}");
                     Regs.A = Memory[(ushort)(Fetch() | 0xFF00)];
                     break;
 
@@ -1446,7 +1444,6 @@ namespace GB.emu
 
         public void RequestInterrupt(InterruptType type)
         {
-            //Console.WriteLine("requesting interrupt: {0}", type);
             Memory[MMU.IFREG] |= (byte)type;
         }
 
@@ -1469,7 +1466,6 @@ namespace GB.emu
 
         private void DoInterrupt(InterruptType type)
         {
-            //Console.WriteLine("interrupting: {0}", type);
             Memory.IMEF = false;
             Memory[MMU.IFREG] &= (byte)~type;
             Memory.Push(Regs.PC);

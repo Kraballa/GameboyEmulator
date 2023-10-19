@@ -87,6 +87,11 @@ namespace GB
 
             ImGui.Begin("Control");
             if (ImGui.Button("Reset")) { LoadRom(Rom); }
+
+            if (ImGui.Button("Load Tetris")) { LoadRom(new Rom("tetris.gb")); }
+            ImGui.SameLine();
+            if (ImGui.Button("Load cpuinstrs-10")) { LoadRom(new Rom("./individual/10-bit ops.gb")); }
+
             ImGui.Checkbox("CPU Run", ref CPURun);
             if (ImGui.Button("CPU Step")) { CPUStep = true; }
             string lastInstr;
@@ -100,6 +105,7 @@ namespace GB
             }
             ImGui.Text($"lastInstr: 0x{lastInstr}");
             ImGui.Text($"cpu state: {CPU.GetState()}");
+            ImGui.Text($"flags: {CPU.FlagsToString()}");
 
             if (ImGui.Button("test log"))
             {
@@ -180,10 +186,10 @@ namespace GB
                 CPU.LCD.RenderDebugTiles();
                 Render.End();
             }
-            GraphicsDevice.SetRenderTarget(null);
 
             ImGuiLayout();
 
+            GraphicsDevice.SetRenderTarget(null);
             Renderer.AfterLayout();
         }
     }
