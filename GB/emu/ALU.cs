@@ -18,48 +18,48 @@ namespace GB.emu
             Regs = CPU.Instance.Regs;
         }
 
-        public int INCD8(int arg)
+        public byte INCD8(int arg)
         {
             int result = (arg + 1) & 0xFF;
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB);
             Regs.Place((arg & 0x0F) == 0x0F, Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int INCD16(int arg)
+        public byte INCD16(int arg)
         {
-            return (arg + 1) & 0xFFFF;
+            return (byte)((arg + 1) & 0xFFFF);
         }
 
-        public int DECD8(int arg)
+        public byte DECD8(int arg)
         {
             int result = (arg - 1) & 0xFF;
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Set(Flags.SUB);
             Regs.Place((arg & 0x0F) == 0x00, Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int DECD16(int arg)
+        public byte DECD16(int arg)
         {
-            return (arg - 1) & 0xFFFF;
+            return (byte)((arg - 1) & 0xFFFF);
         }
 
-        public int ADD16(int arg1, int arg2)
+        public byte ADD16(int arg1, int arg2)
         {
             Regs.Unset(Flags.SUB);
             Regs.Place((arg1 & 0x0FFF) + (arg2 & 0x0FFF) > 0x0FFF, Flags.HCARRY);
             Regs.Place((arg1 + arg2) > 0xFFFF, Flags.CARRY);
-            return (arg1 + arg2) & 0xFFFF;
+            return (byte)((arg1 + arg2) & 0xFFFF);
         }
 
-        public int ADDD16D8(int arg1, int arg2)
+        public byte ADDD16D8(int arg1, int arg2)
         {
-            return (arg1 + arg2) & 0xFFFF;
+            return (byte)((arg1 + arg2) & 0xFFFF);
         }
 
-        public int ADDSP(int arg1, int arg2)
+        public byte ADDSP(int arg1, int arg2)
         {
             Regs.Unset(Flags.ZERO);
             Regs.Unset(Flags.SUB);
@@ -67,10 +67,10 @@ namespace GB.emu
             int result = arg1 + arg2;
             Regs.Place((((arg1 & 0xff) + (arg2 & 0xff)) & 0x100) != 0, Flags.CARRY);
             Regs.Place((((arg1 & 0x0f) + (arg2 & 0x0f)) & 0x10) != 0, Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int DAA(int arg)
+        public byte DAA(int arg)
         {
             int result = arg;
             if (Regs.IsSet(Flags.SUB))
@@ -104,60 +104,60 @@ namespace GB.emu
             }
             result &= 0xFF;
             Regs.Place(result == 0, Flags.ZERO);
-            return result;
+            return (byte)result;
         }
 
-        public int CPL(int arg)
+        public byte CPL(int arg)
         {
             Regs.Set(Flags.SUB | Flags.HCARRY);
-            return (~arg) & 0xFF;
+            return (byte)((~arg) & 0xFF);
         }
 
-        public int SCF(int arg)
+        public byte SCF(int arg)
         {
             Regs.Unset(Flags.SUB | Flags.HCARRY);
             Regs.Set(Flags.CARRY);
-            return arg;
+            return (byte)arg;
         }
 
-        public int CCF(int arg)
+        public byte CCF(int arg)
         {
             Regs.Unset(Flags.SUB | Flags.HCARRY);
             Regs.Flip(Flags.CARRY);
-            return arg;
+            return (byte)arg;
         }
 
-        public int ADDD8D8(int arg1, int arg2)
+        public byte ADDD8D8(int arg1, int arg2)
         {
             int value = (arg1 + arg2) & 0xFF;
             Regs.Place(value == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB);
             Regs.Place((arg1 & 0xF) + (arg2 & 0xF) > 0xF, Flags.HCARRY);
             Regs.Place(arg1 + arg2 > 0xFF, Flags.CARRY);
-            return value;
+            return (byte)value;
         }
 
-        public int ADC(int arg1, int arg2)
+        public byte ADC(int arg1, int arg2)
         {
             int carry = Regs.IsSet(Flags.CARRY) ? 1 : 0;
             Regs.Place(((arg1 + arg2 + carry) & 0xff) == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB);
             Regs.Place((arg1 & 0x0f) + (arg2 & 0x0f) + carry > 0x0f, Flags.HCARRY);
             Regs.Place(arg1 + arg2 + carry > 0xff, Flags.CARRY);
-            return (arg1 + arg2 + carry) & 0xff;
+            return (byte)((arg1 + arg2 + carry) & 0xff);
         }
 
-        public int SUBD8D8(int arg1, int arg2)
+        public byte SUBD8D8(int arg1, int arg2)
         {
             int value = (arg1 - arg2) & 0xFF;
             Regs.Place(value == 0, Flags.ZERO);
             Regs.Set(Flags.SUB);
             Regs.Place((arg2 & 0xF) > (arg1 & 0xF), Flags.HCARRY);
             Regs.Place(arg2 > arg1, Flags.CARRY);
-            return value;
+            return (byte)value;
         }
 
-        public int SBC(int arg1, int arg2)
+        public byte SBC(int arg1, int arg2)
         {
             int carry = Regs.IsSet(Flags.CARRY) ? 1 : 0;
             int result = arg1 - arg2 - carry;
@@ -166,44 +166,44 @@ namespace GB.emu
             Regs.Set(Flags.SUB);
             Regs.Place(((arg1 ^ arg2 ^ (result & 0xff)) & (1 << 4)) != 0, Flags.HCARRY);
             Regs.Place(result < 0, Flags.CARRY);
-            return result & 0xFF;
+            return (byte)(result & 0xFF);
         }
 
-        public int AND(int arg1, int arg2)
+        public byte AND(int arg1, int arg2)
         {
             int result = arg1 & arg2;
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.CARRY);
             Regs.Set(Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int OR(int arg1, int arg2)
+        public byte OR(int arg1, int arg2)
         {
             int result = arg1 | arg2;
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int XOR(int arg1, int arg2)
+        public byte XOR(int arg1, int arg2)
         {
             int result = (arg1 ^ arg2) & 0xFF;
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int CP(int arg1, int arg2)
+        public byte CP(int arg1, int arg2)
         {
             Regs.Place(((arg1 - arg2) & 0xff) == 0, Flags.ZERO);
             Regs.Set(Flags.SUB);
             Regs.Place((0xF & arg1) > (0xF & arg2), Flags.HCARRY);
             Regs.Place(arg2 > arg1, Flags.CARRY);
-            return arg1;
+            return (byte)arg1;
         }
 
-        public int RLC(int arg)
+        public byte RLC(int arg)
         {
             int result = (arg << 1) & 0xFF;
             if ((arg & (1 << 7)) != 0)
@@ -217,10 +217,10 @@ namespace GB.emu
             }
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int RRC(int arg)
+        public byte RRC(int arg)
         {
             int result = (arg >> 1);
             if ((arg & 1) == 1)
@@ -234,82 +234,82 @@ namespace GB.emu
             }
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int RL(int arg)
+        public byte RL(int arg)
         {
             int result = (arg << 1) & 0xFF;
             result |= Regs.IsSet(Flags.CARRY) ? 1 : 0;
             Regs.Place((arg & (1 << 7)) != 0, Flags.CARRY);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int RR(int arg)
+        public byte RR(int arg)
         {
             int result = arg >> 1;
             result |= Regs.IsSet(Flags.CARRY) ? (1 << 7) : 0;
             Regs.Place((arg & 1) != 0, Flags.CARRY);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int SLA(int arg)
+        public byte SLA(int arg)
         {
             int result = (arg << 1) & 0xFF;
             Regs.Place((arg & (1 << 7)) != 0, Flags.CARRY);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int SRA(int arg)
+        public byte SRA(int arg)
         {
             int result = (arg >> 1) | (arg & (1 << 7)); //TODO: doublecheck
             Regs.Place((arg & 1) != 0, Flags.CARRY);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int SWAP(int arg)
+        public byte SWAP(int arg)
         {
             int upper = arg & 0xF0;
             int lower = arg & 0x0F;
             int result = (lower << 4) | (upper >> 4);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.CARRY | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int SRL(int arg)
+        public byte SRL(int arg)
         {
             int result = (arg >> 1);
             Regs.Place((arg & 1) != 0, Flags.CARRY);
             Regs.Place(result == 0, Flags.ZERO);
             Regs.Unset(Flags.SUB | Flags.HCARRY);
-            return result;
+            return (byte)result;
         }
 
-        public int BIT(int arg1, int arg2)
+        public byte BIT(int arg1, int arg2)
         {
             Regs.Unset(Flags.SUB);
             Regs.Set(Flags.HCARRY);
             Regs.Place((arg1 & (1 << arg2)) == 0, Flags.ZERO);
-            return arg1;
+            return (byte)arg1;
         }
 
-        public int RES(int arg1, int arg2)
+        public byte RES(int arg1, int arg2)
         {
-            return (arg1 & ~(1 << arg2)) & 0xFF;
+            return (byte)((arg1 & ~(1 << arg2)) & 0xFF);
         }
 
-        public int SET(int arg1, int arg2)
+        public byte SET(int arg1, int arg2)
         {
-            return (arg1 | (1 << arg2)) & 0xFF;
+            return (byte)((arg1 | (1 << arg2)) & 0xFF);
         }
     }
 }

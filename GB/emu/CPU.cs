@@ -511,7 +511,7 @@ namespace GB.emu
                 case 0x4D:
                 case 0x5D:
                 case 0x6D:
-                    Regs.SetLow(HighBit - 3, (byte)Regs.GetByte(LowBit + 1));
+                    Regs.SetLow(HighBit - 3, (byte)Regs.GetByte(LowBit - 7));
                     Cycles = 1;
                     break;
                 #endregion
@@ -644,7 +644,7 @@ namespace GB.emu
                 case 0x8B:
                 case 0x8C:
                 case 0x8D:
-                    Regs.A = (byte)ALU.ADC(Regs.A, Regs.GetByte(LowBit + 1));
+                    Regs.A = (byte)ALU.ADC(Regs.A, Regs.GetByte(LowBit - 7));
                     Cycles = 1;
                     break;
 
@@ -661,7 +661,7 @@ namespace GB.emu
                 case 0x9B:
                 case 0x9C:
                 case 0x9D:
-                    Regs.A = (byte)ALU.SBC(Regs.A, Regs.GetByte(LowBit + 1));
+                    Regs.A = (byte)ALU.SBC(Regs.A, Regs.GetByte(LowBit - 7));
                     Cycles = 1;
                     break;
                 case 0x9E:
@@ -799,7 +799,6 @@ namespace GB.emu
 
                 case 0xC3:
                     Regs.PC = FetchWord();
-                    Console.WriteLine("jumping to {0:X}", Regs.PC);
                     Cycles = 4;
                     break;
 
@@ -1065,7 +1064,7 @@ namespace GB.emu
                     Cycles = 2;
                     break;
                 case 0x06:
-                    Regs.SetByte(LowBit + 1, ALU.RLC(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.RLC(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1082,7 +1081,7 @@ namespace GB.emu
                     Cycles = 2;
                     break;
                 case 0x16:
-                    Regs.SetByte(LowBit + 1, ALU.RL(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.RL(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1099,7 +1098,7 @@ namespace GB.emu
                     Cycles = 2;
                     break;
                 case 0x26:
-                    Regs.SetByte(LowBit + 1, ALU.SLA(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.SLA(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1116,7 +1115,7 @@ namespace GB.emu
                     Cycles = 2;
                     break;
                 case 0x36:
-                    Regs.SetByte(LowBit + 1, ALU.SWAP(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.SWAP(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1129,11 +1128,11 @@ namespace GB.emu
                 case 0x0C:
                 case 0x0D:
                 case 0x0F:
-                    Regs.SetByte(LowBit + 1, ALU.RRC(Regs.GetByte(LowBit + 1)));
+                    Regs.SetByte(LowBit - 7, ALU.RRC(Regs.GetByte(LowBit - 7)));
                     Cycles = 2;
                     break;
                 case 0x0E:
-                    Regs.SetByte(LowBit + 1, ALU.RRC(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.RRC(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1146,11 +1145,11 @@ namespace GB.emu
                 case 0x1C:
                 case 0x1D:
                 case 0x1F:
-                    Regs.SetByte(LowBit + 1, ALU.RR(Regs.GetByte(LowBit + 1)));
+                    Regs.SetByte(LowBit - 7, ALU.RR(Regs.GetByte(LowBit - 7)));
                     Cycles = 2;
                     break;
                 case 0x1E:
-                    Regs.SetByte(LowBit + 1, ALU.RR(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.RR(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1163,11 +1162,11 @@ namespace GB.emu
                 case 0x2C:
                 case 0x2D:
                 case 0x2F:
-                    Regs.SetByte(LowBit + 1, ALU.SRA(Regs.GetByte(LowBit + 1)));
+                    Regs.SetByte(LowBit - 7, ALU.SRA(Regs.GetByte(LowBit - 7)));
                     Cycles = 2;
                     break;
                 case 0x2E:
-                    Regs.SetByte(LowBit + 1, ALU.SRA(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.SRA(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1180,11 +1179,11 @@ namespace GB.emu
                 case 0x3C:
                 case 0x3D:
                 case 0x3F:
-                    Regs.SetByte(LowBit + 1, ALU.SRL(Regs.GetByte(LowBit + 1)));
+                    Regs.SetByte(LowBit - 7, ALU.SRL(Regs.GetByte(LowBit - 7)));
                     Cycles = 2;
                     break;
                 case 0x3E:
-                    Regs.SetByte(LowBit + 1, ALU.SRL(Memory[Regs.HL]));
+                    Memory[Regs.HL] = ALU.SRL(Memory[Regs.HL]);
                     Cycles = 4;
                     break;
                 #endregion
@@ -1307,7 +1306,7 @@ namespace GB.emu
                 case 0x96:
                 case 0xA6:
                 case 0xB6:
-                    Regs.SetByte(LowBit + 1, ALU.RES(Memory[Regs.HL], ((int)HighBit - 8) * 2));
+                    Memory[Regs.HL] = ALU.RES(Memory[Regs.HL], ((int)HighBit - 8) * 2);
                     Cycles = 4;
                     break;
 
@@ -1339,15 +1338,15 @@ namespace GB.emu
                 case 0xBC:
                 case 0xBD:
                 case 0xBF:
-                    Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 8) * 2 + 1));
+                    Regs.SetByte(LowBit - 7, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 8) * 2 + 1));
                     Cycles = 2;
                     break;
                 case 0x8E:
                 case 0x9E:
                 case 0xAE:
                 case 0xBE:
-                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 8) * 2 + 1));
-                    Cycles = 2;
+                    Memory[Regs.HL] = ALU.SET(Memory[Regs.HL], ((int)HighBit - 8) * 2 + 1);
+                    Cycles = 4;
                     break;
                 #endregion
 
@@ -1388,7 +1387,7 @@ namespace GB.emu
                 case 0xD6:
                 case 0xE6:
                 case 0xF6:
-                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2));
+                    Memory[Regs.HL] = ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2);
                     Cycles = 4;
                     break;
 
@@ -1420,15 +1419,15 @@ namespace GB.emu
                 case 0xFC:
                 case 0xFD:
                 case 0xFF:
-                    Regs.SetByte(LowBit + 1, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 0xC) * 2 + 1));
+                    Regs.SetByte(LowBit - 7, ALU.SET(Regs.GetByte(LowBit - 7), ((int)HighBit - 0xC) * 2 + 1));
                     Cycles = 2;
                     break;
                 case 0xCE:
                 case 0xDE:
                 case 0xEE:
                 case 0xFE:
-                    Regs.SetByte(LowBit + 1, ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2 + 1));
-                    Cycles = 2;
+                    Memory[Regs.HL] = ALU.SET(Memory[Regs.HL], ((int)HighBit - 0xC) * 2 + 1);
+                    Cycles = 4;
                     break;
                     #endregion
             }

@@ -119,11 +119,12 @@ namespace GB.emu
             regs[index] = (ushort)(value | (regs[index] & 0xFF00));
         }
 
-        public int GetByte(uint index)
+        public byte GetByte(uint index)
         {
             switch (index)
             {
                 case 0:
+                case 8:
                     return A;
                 case 1:
                     return B;
@@ -145,9 +146,8 @@ namespace GB.emu
         {
             switch (index)
             {
-                default:
-                case 8:
                 case 0:
+                case 8:
                     A = (byte)(value & 0xFF);
                     break;
                 case 1:
@@ -168,7 +168,10 @@ namespace GB.emu
                 case 6:
                     L = (byte)(value & 0xFF);
                     break;
+                default:
+                    throw new Exception("huh");
             }
+
         }
 
         public ushort this[uint index]
